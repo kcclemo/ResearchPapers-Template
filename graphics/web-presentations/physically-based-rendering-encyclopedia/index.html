@@ -1,0 +1,1679 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Physically Based Rendering Encyclopedia | Research Papers</title>
+  <meta name="description" content="An emporium/bible of sorts to wherein I will try to encompass all there is to know about creating physically based materials for the next-gen.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="/css/index.css">
+  <style>
+    main {
+      max-width: 816px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navbar (sit on top) -->
+  <div class="w3-top">
+    <div class="w3-bar w3-white w3-wide w3-padding w3-card">
+      <a href="#home" class="w3-bar-item w3-button"> <img src="/images/logo.png" style="height: 60px;"> </a>
+      <!-- Float links to the right. Hide them on small screens -->
+      <div class="w3-right w3-hide-small">
+        <a href="#Subjects" class="w3-bar-item w3-button" style="margin-top: 15px;">Subjects</a>
+        <a href="#about" class="w3-bar-item w3-button" style="margin-top: 15px;">About</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="w3-display-container w3-content w3-wide" style="max-width: 816px;" id="home">
+    <img class="w3-image" src="/images/home_page.jpg" alt="Architecture">
+    <div class="w3-display-middle w3-margin-top w3-center">
+      <h1 class="w3-xxlarge w3-text-white"><span class="w3-padding w3-black w3-opacity-min"><b>Physically Based Rendering Encyclopedia</b></span></h1>
+    </div>
+  </header>
+
+  <!-- Main article -->
+  <main>
+    <p>
+      <small>v. 0.97 (Dec. 19, 2017) Compiled by: Brian Yu (3py0n)</small>
+      <br>
+      <small>This example sourced from <a href="https://docs.google.com/document/d/1Fb9_KgCo0noxROKN4iT8ntTbx913e-t4Wc2nMRWPzNk/view" target="_blank" rel="noopener">Physically Based Rendering Encyclopedia</a></small>
+    </p>
+    <p>There is no one way to accomplish a task, more specifically in texturing. The below is a guideline of the most
+      common and effective routes currently and is by no-means the only way to texture for PBR. Final name of this
+      document is in consideration. ENJOY!</p>
+    <h2>Introduction</h2>
+    <p>An emporium/bible of sorts to wherein I will try to encompass all there is to
+      know about creating physically based materials for the next-gen. I am still new to PBR texturing and
+      am learning as I make this bible. The reason for me making this is to have a central database for
+      artists and developers to look at to help them with their workflow. It's also a great way for
+      people who are new to PBR to learn more. Please note that this is just a general guide/bible and is
+      not the end-all-be-all. That is to say, there is typically not only 1 way of doing things. Before I
+      finish, this document is also for people who have prior knowledge in texturing and making 3D art in
+      general.I would like to take this opportunity to thank all the wonderfully talented and innovative people
+      who I sourced from for their work on this subject matter. :) PS: This is more for the artistic side
+      and less of the math/deep calculations and how it works exactly, etc.</p>
+    <h2>Copyright</h2>
+    <p>I do not pretend to own all of what I am stating in this document. Some
+      parts will be from my personal experience/knowledge while other parts will be excerpts taken from sources
+      (credit will be identified at the beginning of a section).</p>
+    <aside style="background: #e5e5e5; border: 1px solid black; padding: 1em;">
+      <h1>Table of Contents</h1>
+      <ul style="list-style: none;">
+        <li><a href="#h.u16lyn9xhv6h">Light Interaction &amp; Really Sciency Stuff</a></li>
+        <li><a href="#h.y94w1qp4r4mt">PBR: The Definition &amp; More</a></li>
+        <li><a href="#h.q084qb6yyizu">Guidelines &amp; Basics: The How-To Guide</a></li>
+        <li><a href="#h.he2pxwn2p5v7">Material Reference Values</a></li>
+        <li><a href="#h.kesmp27npcz">Tips &amp; Techniques</a></li>
+        <li><a href="#h.fsbxkgso6mkw">Examples</a></li>
+        <li><a href="#h.oxe8vtv1hlf7">Additional Readings &amp; References</a></li>
+        <li><a href="#h.3iq8n6ne609e">FAQ</a></li>
+        <li><a href="#h.2e4ou5ht8iea">Glossary &amp; Terms</a></li>
+        <li><a href="#h.o2uv0gde2t">Tools &amp; Programs</a></li>
+      </ul>
+    </aside>
+    <hr>
+    <section>
+      <h1 id="h.u16lyn9xhv6h">Light Interaction &amp; Really Sciencey Stuff</h1>
+      <p>I won't be going through or compiling scientific formulas on how light is perceived and bounces off X material,
+        etc. There are many other sites for that online. Instead I'll just be compiling some basic rules of how light
+        interactions with types of materials. This will offer a better understanding when texturing in order to achieve
+        more
+        realistic results!</p>
+      <br>
+      <h2>Diffuse and Specular Reflectance (<a href="https://www.google.com/url?q=http://docs.cryengine.com/display/SDKDOC4/Physically%2BBased%2BRendering&amp;sa=D&amp;ust=1571869491814000">source</a>)
+      </h2>
+      <p>When light hits a surface, it splits into two directions: some part of it is reflected immediately while the rest gets refracted and enters the surface. The refracted light can be absorbed or can be scattered around underneath the surface and exit again at a slightly different location.</p>
+      <p>Light that gets reflected directly from the surface is handled as specular reflectance in a shading model. The light that is refracted and undergoes subsurface scattering is handled as diffuse reflectance.</p>
+      <p>The amount of light that is reflected versus refracted depends on the surface substance and the angle at which the light hits the surface. At a grazing angle, the amount of light that gets reflected directly (specular) gets higher, until it reaches 100% at an extreme angle. This behavior is described by the Fresnel effect.</p>
+      <h2>Material Types (<a href="https://www.google.com/url?q=http://docs.cryengine.com/display/SDKDOC4/Physically%2BBased%2BRendering&amp;sa=D&amp;ust=1571869491815000">source</a>)</h2>
+      <p>There are only two categories of substances which are relevant for rendering: metals (conductors like iron, gold, copper, etc.) and non-metals (dielectric materials like plastic, stone, wood, skin, glass, etc.). Both have special characteristics regarding diffuse and specular reflectance.</p>
+      <p>Metal has no diffuse reflection. This means that metal should have a black diffuse color. All visible light is reflected directly from the surface (specular reflectance). The different types of metal have characteristic specular colors.</p>
+      <p>Metal actually neither refracts nor absorbs ANY light, metals are so dense that light can't actually enter the surface, which is why all of the light is reflected. (<a href="https://www.google.com/url?q=http://www.polycount.com/forum/showpost.php?p%3D2088046%26postcount%3D8&amp;sa=D&amp;ust=1571869491817000">source</a>)</p>
+      <p>In contrast to metal, non-metal has diffuse reflection, however the specular reflection is a lot weaker and less varied than for metal. Specular reflectance for non-metal is monochromatic (no color, just gray). Most non-metals reflect only a small fraction of the light as specular, for most materials between 2% and 5%.</p>
+      <h2>Energy Conservation (<a href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-theory&amp;sa=D&amp;ust=1571869491818000">source</a>)</h2>
+      <p>Reflection and diffusion are mutually exclusive. This is because, in order for light to be diffused, light must first penetrate the surface (that is, fail to reflect). This is known in shading parlance as an example of "energy conservation", which just means that the light leaving a surface is never any brighter than that which fell upon it originally.</p>
+      <p>This is easy to enforce in a shading system: one simply subtracts reflected light before allowing the diffuse shading to occur. This means highly reflective objects will show little to no diffuse light, simply because little to no light penetrates the surface, having been mostly reflected. The converse is also true: if an object has bright diffusion, it cannot be especially reflective.
+        <br>
+        <img src="images/image24.png" alt="An example of the effect of increasing reflectivity.">
+        <br>
+      </p>
+      <p>Energy conservation of this sort is an important aspect of physically-based shading. It allows the artist to work with reflectivity and albedo values for a material without accidentally violating the laws of physics (which tends to look bad). While enforcing these constraints in code isn't strictly necessary to producing good looking art, it does serve a useful role as a kind of "nanny physicist" that will prevent artwork from bending the rules too far or becoming inconsistent under different lighting conditions.</p>
+      <p>When the equations are properly balanced, a renderer should display rough surfaces as having larger reflection highlights which appear dimmer than the smaller, sharper highlights of a smooth surface. It is this apparent difference in brightness that is key: both materials are reflecting the same amount of light, but the rougher surface is spreading it out in different directions, whereas the smoother surface is reflecting a more concentrated "beam":
+        <br>
+        <img src="images/image15.png" alt="The effect of increasing gloss.">
+        <br>
+      </p>
+      <p>Here we have a second form of energy conservation that must be maintained, in addition to the diffusion/reflection balance described earlier. Getting this right is one of the more important points required for any renderer aspiring to be "physically-based".</p>
+      <h2>Linear-Space Lighting &amp; Gamma (<a href="https://www.google.com/url?q=http://filmicgames.com/archives/299&amp;sa=D&amp;ust=1571869491819000">source</a>)</h2>
+      <p>Some more sciency information for those who are curiousity-inclined. I read it. Great read! Here is the shortened version of the shortened version. the TL:DR if you will. I'm almost making a note here incase the site goes down. It is a little dated.</p>
+      <p>The gamma colour space is 0 - 255. The neutral gray/50% is 187, not 127(128).</p>
+      <p><img alt="page0012.jpg" src="images/image21.jpg" style="width: 357.50px; height: 267.88px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"><img alt="page0013.jpg" src="images/image31.jpg" style="width: 356.50px; height: 267.85px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></p>
+      <p>As of the original writing, standard monitor gamma is about 2.2, with some exceptions.</p>
+      <p>A more indepth explanation of gamma and how it affects displays (monitor, cameras, LCD on camera, etc) is given in the article. For the sake of lessening the amount of diagrams, etc I've omitted it.</p>
+      <h2>Gamma and Their Effect on Electronics</h2>
+      <p>Though not entirely important to know for the sake of texturing, the single most important thing to know about gamma according to the article is: An image taken from a camera stored on your hard drive is brighter/pastelish compared to what is displayed on your monitor. How this breaks down is that the camera takes a photo. The light is captured and the camera applies a formula/split each pixel into 255 levels. Stored in gamma space. The image is now "brighter" than it is in real life. Once the image is on your hard drive and viewed through your monitor, another series of events take place where the gamma affects the image by a standard of 2.2 and gets output to the monitor looking the way it should (like in real life).</p>
+      <p>Here is where we get to the nitty gritty of gamma vs linear. I stated that I wouldn't put too many images but this part is too good not to.</p>
+      <p>1 2 3</p>
+      <p><img src="images/image6.jpg" alt="3D Graphics 1" style="width: 260.50px; height: 195.38px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"><img src="images/image4.jpg" alt="3D Graphics 2" style="width: 261.50px; height: 194.88px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"><img src="images/image28.jpg" alt="3D Graphics 3" style="width: 260.50px; height: 196.11px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></p>
+      <table>
+        <tbody>
+          <tr>
+            <td colspan="1" rowspan="1">
+              <p>1. The left image does all the lighting calculations in gamma-space. The right image does all calculations in linear-space. If you are on the PC/PS3/360, you should be doing your lighting in linear-space. If you are on the Wii/PSP/iPhone, you gotta do what you gotta do.</p>
+              <p>The image on the left is wrong for several reasons. First, it has a really, really soft falloff, which does not look correctly. Also, you can see a lot of hue-shifting, especially in the specular highlight. It seems to shift from white to yellow to green and back to yellow. When you look at the image on the right, it looks like a diffuse surface with a white specular highlight. It looks like what the lighting model says it should look like. Finally, I'm not talking about what looks "good", I'm talking about what is "correct". That's an entirely different discussion.</p>
+              <p>2. [Typical shader that does not convert texture back into linear-space] You are first reading the texture. BUT, the texture that is on your hard drive is in gamma-space. The texture is much brighter and more desaturated than the texture you see when you look at it on your screen. So you are taking this too-bright texture, and applying your lighting model to it, for the middle image. Your monitor then applies a pow(2.2) to it which darkens it and gives you the final result. How do you fix this?</p>
+            </td>
+            <td colspan="1" rowspan="1">
+              <p>4<img src="images/image23.jpg" alt="3D Graphics 4" style="width: 259.04px; height: 195.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></p>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <p>3. [Typical shader that converts texture back into linear-space] When the texture is read by the hardware, it is in gamma-space (1st image). But the pow(x,2.2) converts the texture back into linear-space (2nd image). Then we do the lighting calculations (3rd image). Now that we have the final image that we want, we apply a pow(x,1/2.2) to convert it back into gamma-space. The gamma-space image is sent to the monitor, which applies it's own pow(x,2.2) and displays the final image.</p>
+              <p>Of course, those pow() functions aren't free in a shader. But they are in fact free if you use the hardware sampler states. For the texture read, you can use D3DSAMP_SRGBTEXTURE, and for the write to the framebuffer, you can use D3DRS_SRGBWRITEENABLE. So now your shader has the same code as before, and the hardware states give you the conversions for free.</p>
+              <p>4. Here is a real image of a volleyball. The top CG image is in linear-space and the bottom is in gamma-space. Note how the linear image matches the harsh falloff of the real image, but the gamma one does not.</p>
+              <p>So that's how to make your image look "correct". Making it look "good" is an exercise for the reader.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>That wraps up the shortened-shortened version of what is Linear Space and Gamma Space. There is much to know and read and for all those who wish to venture on this journey I say, go for it! But for this doc, I will be stopping here with the explanation as I feel it is an adequate amount of information. What a great read!</p>
+      <p>For more information on this subject visit <a href="https://www.google.com/url?q=http://wiki.polycount.com/Gamma&amp;sa=D&amp;ust=1571869491826000">Polycount's wiki.</a></p>
+    </section>
+    <hr>
+    <section>
+      <h1 id="h.y94w1qp4r4mt">PBR: The Definition &amp; More</h1>
+      <p>Physically based rendering (PBR) refers to the concept of using realistic shading/lighting models along with measured surface values to accurately represent real-world materials. PBR is more of a concept than a strict set of rules, and as such, the exact implementations of PBR systems tend to vary. (<a href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice&amp;sa=D&amp;ust=1571869491827000">source</a>)</p>
+      <h2>New VS Old (<a href="https://www.google.com/url?q=http://docs.cryengine.com/display/SDKDOC4/Physically%2BBased%2BRendering&amp;sa=D&amp;ust=1571869491828000">source</a>)</h2>
+      <p>The biggest difference of a physically based model compared to other older game models is the use of specular. While a specular mask was often used to vary the intensity of specular highlights over a surface, the specular color is a physical value now which is constant for a single type of material. To get variation in the highlights, a gloss/reflection map should be used instead. Gloss is more powerful than the traditional specular mask, as gloss influences not only the brightness of a highlight but also it's size and the sharpness of environmental reflections.</p>
+      <p>Note that every engine/shader varies in one way or another to how it represents the physical world, specifically lighting. Values/textures in UE4 may differ from CryENGINE 3 and Marmoset, etc. </p>
+      <h2>What is PBR or sometimes referred to as PBS or BRDF (<a href="https://www.google.com/url?q=http://www.garagegames.com/community/forums/viewthread/136389&amp;sa=D&amp;ust=1571869491829000">source</a>)</h2>
+      <p>The most trivial explanation of a PBR/PBS/BRDF (physical based renderer / physical based shader / bidirectional reflectance distribution function) is that it is the bit of shader code describing how a surface reacts to light. Generally, it is responsible for calculating the specular highlights and diffuse characteristics of the surface material. They are mathematical approximations of how surfaces react to light in the real world. In computer graphics, we try to model the physical world as accurately as possible, but we are constrained by computation. For this reason, the mathematical efficiency of BRDFs is very important. Some of the better known BRDFs - Blinn, Phong and Lambert, for instance - are well known for this reason: they are computationally inexpensive to calculate and intuitive to adjust. However they compromise efficiency for accuracy. If we concern ourselves with more expensive and more accurate models, we uncover a second layer of shading models: Oren-Nayar, Cook-Torrance, Askikhmin-Shirley, etc.</p>
+      <p>There is no single model that fits every situation, but there are some better than others. The Cook-Torrance model has been shown to be a top performer, when compared against actual acquired BRDF data. Of course, with the good comes the bad and Cook-Torrance is one of the most expensive models to compute. But for overall results, it is hard to beat. So this is our target; a nice implementation of the Cook-Torrance reflectance model. Now this maybe an issue when using Cook-Torrance model on mobiles and consoles due to hardware limitations, so it's a question of which module to use.</p>
+      <h2>Basic Theory of Physically-Based Rendering (<a class="c7" href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-theory&amp;sa=D&amp;ust=1571869491831000">source</a>)</h2>
+      <p>Much of what makes a physically-based shading system different from its predecessors is a more detailed reasoning about the behavior of light and surfaces. Shading capabilities have advanced enough that some of the old approximations can now be safely discarded, and with them some of the old means of producing art.</p>
+      <h3>Dielectric and Metallic Materials (<a class="c7" href="https://www.google.com/url?q=http://seblagarde.wordpress.com/2011/08/17/feeding-a-physical-based-lighting-mode/&amp;sa=D&amp;ust=1571869491832000">source</a>)</h3>
+      <p>There are different types of substances in real world. They can be classified in three main group: Insulators, semi-conductors and conductors.</p>
+      <p>In game we are only interesting by two of them: Insulators (Dielectric materials) and conductors (Metallic materials).</p>
+      <p>Artists should understand to which category a material belong to. This will have influence on diffuse and specular value to assign to this material.</p>
+      <p>Dielectric materials are the most common materials. Their optical properties rarely
+        vary much over the visible spectrum: water, glass, skin, wood, hair, leather, plastic, stone, concrete,
+        ruby, diamond&hellip;</p>
+      <p>Metals. Their optical properties vary over the visible spectrum: iron, aluminium, copper, gold, cobalt, nickel, silver&hellip;</p>
+      <h3>Diffusion &amp; Reflection</h3>
+      <p>Diffusion and reflection &ndash; also known as "diffuse" and "specular" light respectively &ndash; are two terms describing the most basic separation of surface/light interactions. Most people will be familiar with these ideas on a practical level, but may not know how they are physically distinct.</p>
+      <h3>Reflection/Specular</h3>
+      <p>When light hits a surface boundary some of it will reflect &ndash; that is, bounce off &ndash; from the surface and leave heading in a direction on the opposing side of the surface normal. This behavior is very similar to a ball thrown against the ground or a wall &ndash; it will bounce off at the opposite angle. On a smooth surface this will result in a mirror-like appearance. The word "specular", often used to describe the effect, is derived from the latin for "mirror" (it seems "specularity" sounds less awkward than "mirrorness").</p>
+      <h3>Specular Colour (<a class="c7" href="https://www.google.com/url?q=http://seblagarde.wordpress.com/2011/08/17/feeding-a-physical-based-lighting-mode/&amp;sa=D&amp;ust=1571869491834000">source</a>)</h3>
+      <p>Good rules for specular color range of dielectric materials are:</p>
+      <ul>
+        <li>No value under 0.02</li>
+        <li>Common gemstones 0.05-0.17</li>
+        <li>Common liquids 0.02-0.04</li>
+        <li>When not finding reference for a dielectric material, setting a value of 0.04 (around plastic)</li>
+      </ul>
+      <p>Except gemstones, any dielectric material we will use should be in the range 0.02-0.05 <a href="https://www.google.com/url?q=http://seblagarde.wordpress.com/2011/08/17/feeding-a-physical-based-lighting-mode/&amp;sa=D&amp;ust=1571869491835000">(more values found here)</a>.</p>
+      <p>As you can expect, you won't spend your time finding all the refractive indices of metallic material. Especially since values are for pure laboratory material. But these specular colors can be used as references. Moreover, we can see that specular colors for metallic objects are close to what we think the color of the metal is. The basic rule for metal is to set up a value above 0.5.
+        <br>
+        <br>
+        <img src="images/image36.png" alt="Reflection and diffusion" style="width: 265.50px; height: 130.00px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);">
+        <br>
+        <br>
+      </p>
+      <h3>Diffuse/Albedo</h3>
+      <p>Not all light reflects from a surface, however. Usually some will penetrate into the interior of the illuminated object. There it will either be absorbed by the material (usually converting to heat) or scattered internally. Some of this scattered light may make its way back out of the surface, then becoming visible once more to eyeballs and cameras. This is known by many names: "Diffuse Light", "Diffusion", "Subsurface Scattering" &ndash; all describe the same effect.</p>
+      <p>The absorption and scattering of diffuse light are often quite different for different wavelengths of light, which is what gives objects their color (e.g. if an object absorbs most light but scatters blue, it will appear blue). The scattering is often so uniformly chaotic that it can be said to appear the same from all directions &ndash; quite different from the case of a mirror! A shader using this approximation really just needs one input: "albedo", a color which describes the fractions of various colors of light that will scatter back out of a surface. "Diffuse color" is a phrase sometimes used synonymously.</p>
+      <h3>Diffuse Colour (<a href="https://www.google.com/url?q=http://seblagarde.wordpress.com/2011/08/17/feeding-a-physical-based-lighting-mode/&amp;sa=D&amp;ust=1571869491837000">source</a>)</h3>
+      <p>In the past, it was usual to bake everything in a "diffuse" texture to fake lighting effects like shadow, reflection, specular&hellip; With newer engines, all these effects are simulated and must not be baked. The best definition for diffuse color in our engine is : How bright a surface is when lit by a 100% bright white light.</p>
+      <p>The lighting unit for these light sources is specified as the color a white lambertian surface would have when illuminated by the light from a direction parallel to the surface normal.</p>
+      <p>This mean that when you set up a light in the game editor with 1 in brightness and point it directly on a quad mapped with a diffuse texture, you get the color as displayed in Photoshop (be aware of postprocess).</p>
+      <p>One of the darkest substances on earth is charcoal, the brightest is fresh snow.</p>
+      <h3>Translucency &amp; Transparency</h3>
+      <p>In some cases diffusion is more complicated &ndash; in materials that have wider scattering distances for example, like skin or wax. In these cases a simple color will usually not do, and the shading system must take into account the shape and thickness of the object being lit. If they are thin enough, such objects often see light scattering out the back side and can then be called translucent. If the diffusion is even lower yet (in for example, glass) then almost no scattering is evident at all and entire images can pass through an object from one side to another intact. These behaviors are different enough from the typical "close to the surface" diffusion that unique shaders are usually needed to simulate them.</p>
+      <h2>Metals</h2>
+      <p>Firstly, metals tend to be much more reflective than insulators (non-conductors). Conductors will usually exhibit reflectivities as high as 60-90%, whereas insulators are generally much lower, in the 0-20% range. These high reflectivities prevent most light from reaching the interior and scattering, giving metals a very "shiny" look.</p>
+      <p>Secondly, reflectivity on conductors will sometimes vary across the visible spectrum, which means that their reflections appear tinted. This coloring of reflection is rare even among conductors, but it does occur in some everyday materials (e.g. gold, copper, and brass). Insulators as a general rule do not exhibit this effect, and their reflections are uncolored.</p>
+      <p>Finally, electrical conductors will usually absorb rather than scatter any light that penetrates the surface. This means that in theory conductors will not show any evidence of diffuse light. In practice however there are often oxides or other residues on the surface of a metal that will scatter some small amounts of light.</p>
+      <p>It is this duality between metals and just about everything else that leads some rendering systems to adopt "metalness" as a direct input. In such systems artists specify the degree to which a material behaves as a metal, rather than specifying only the albedo &amp; reflectivity explicitly. This is sometimes preferred as a simpler means of creating materials, but is not necessarily a characteristic of physically-based rendering.</p>
+      <h3>Fresnel (<a href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23fresnel&amp;sa=D&amp;ust=1571869491841000">source</a>) (<a href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-theory&amp;sa=D&amp;ust=1571869491841000">source 2</a>)</h3>
+      <p>To put it simply, fresnel is the percentage of light that a surface reflects at grazing angles.</p>
+      <p>In computer graphics the word Fresnel refers to differing reflectivity that occurs at different angles. Specifically, light that lands on a surface at a grazing angle will be much more likely to reflect than that which hits a surface dead-on. This means that objects rendered with a proper Fresnel effect will appear to have brighter reflections near the edges. Most of us have been familiar with this for a while now, and its presence in computer graphics is not new. However, PBR shaders have made popular a few important corrections in the evaluation of Fresnel's equations.</p>
+      <p>The first is that for all materials, reflectivity becomes total for grazing angles &ndash; the "edges" viewed on any smooth object should act as perfect (uncolored) mirrors, no matter the material. Yes, really &ndash; any substance can act as a perfect mirror if it is smooth and viewed at the right angle! This can be counterintuitive, but the physics are clear. (Ex. Probably akin to asphalt looking like water/wavy mirror at extreme angles)</p>
+      <p>The second observation about Fresnel properties is that the curve or gradient between the angles does not vary much from material to material. Metals are the most divergent, but they too can be accounted for analytically.</p>
+      <p>The shading system can now handle the Fresnel effect almost entirely on its own; it has only to consult some of the other pre-existing material properties, such as gloss and reflectivity.
+        <br>
+        <br>
+        <img src="images/image16.png" alt="Fresnel" style="width: 443.50px; height: 224.07px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);">
+        <br>
+        <br>
+      </p>
+      <p>A PBR workflow has the artist specify, by one means or another, a "base reflectivity". This provides the minimum amount and color of light reflected. The Fresnel effect, once rendered, will add reflectivity on top of the artist specified value, reaching up to 100% (white) at glancing angles. Essentially the content describes the base, and Fresnel's equations take over from there, making the surface more reflective at various angles as needed.</p>
+      <p>There is one big caveat for the Fresnel effect &ndash; it quickly becomes less evident as surfaces become less smooth. More information on this interaction will be given a bit later on.</p>
+      <p>Fresnel generally should be set to 1 (and is locked to a value of 1 with the
+        metalness reflectivity module) as all types of materials become 100% reflective at grazing angles. Variances
+        in microsurface which result in a brighter or dimmer Fresnel effect are automatically accounted for via the
+        gloss map content.
+        <br>
+        <br>
+        <img src="images/image37.jpg" alt="fresnel + microsurface relationship" style="width: 796.00px; height: 124.00px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);">
+        <br>
+        <br>
+      </p>
+      <p>Note: Toolbag 2 does not currently support a texture map to control Fresnel intensity.</p>
+      <p>Fresnel, in Toolbag 2 and most PBR systems, is approximated automatically by the BRDF, in this case Blinn-Phong or GGX, and usually does not need an additional input. However, there is an extra control for Fresnel for the Blinn-Phong BRDF, which is meant for legacy use as it can result in non physically accurate results.
+        <br>
+        <br>
+        <img src="images/image29.png" alt="Blurry reflection" style="width: 228.50px; height: 113.00px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);">
+        <br>
+        <br>
+      </p>
+      <h3>Microsurface (Roughness/Gloss)</h3>
+      <p>Most real-world surfaces have very small imperfections: tiny grooves, cracks, and
+        lumps too little for the eye to see, and much too small to represent in a normal map of any sane resolution.
+        Despite being invisible to the naked eye, these microscopic features nonetheless affect the diffusion and
+        reflection of light.</p>
+      <p>Microsurface detail has the most noticeable effect on reflection (subsurface
+        diffusion is not greatly affected and won't be discussed further here). In the diagram to the left,
+        you can see parallel lines of incoming light begin to diverge when reflected from a rougher surface, as each
+        ray hits a part of the surface with a different orientation. In short, the rougher the surface gets, the
+        more the reflected light will diverge or appear "blurry".</p>
+      <p>Unfortunately, evaluating each microsurface feature for shading would be prohibitive in terms of art production, memory use, and computation. So what are we to do? It turns out if we give up on describing microsurface detail directly and instead specify a general measure of roughness, we can write fairly accurate shaders that produce similar results. This measure is often referred to as "Gloss", "Smoothness", or "Roughness". It can be specified as a texture or as a constant for a given material.
+        <br>
+        <br>
+        <img src="images/image35.png" alt="Microsurface example: Water and Mud" style="width: 391.96px; height: 230.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);">
+        <br>
+        <br>
+      </p>
+      <p>This microsurface detail is a very important characteristic for any material, as the real world is full of a wide variety of microsurface features. Gloss mapping is not a new concept, but it does play a pivotal role in physically-based shading since microsurface detail has such a big effect on light reflection. As we will soon see, there are several considerations relating to microsurface properties that a PBR shading system improves upon.</p>
+      <p>Microsurface gloss directly affects the apparent brightness of reflections. This means an artist can paint variations directly into the gloss map &ndash; scratches, dents, abraded or polished areas, whatever &ndash; and a PBR system will display not just the change in reflection shape, but relative intensity as well. No "spec mask"/reflectivity changes required!</p>
+      <p>This is significant because two real world quantities that are physically related &ndash; microsurface detail and reflectivity &ndash; are now properly tied together in the art content and rendering process for the first time. This is much like the diffusion/reflection balancing act described earlier: we could be authoring both values independently, but since they are related, the task is only made more difficult by attempting to treat them separately.</p>
+      <p>Further, an investigation of real world materials will show that reflectivity values do not vary widely (see the earlier section on conductivity). A good example would be water and mud: both have very similar reflectivity, but since mud is quite rough and the surface of a puddle is very smooth, they appear very different in terms of their reflections. An artist creating such a scene in a PBR system would author the difference primarily through gloss or roughness maps rather than adjusting reflectivity, as shown above.</p>
+      <p>Microsurface properties have other subtle effects on reflection as well. For example, the "edges-are-brighter" Fresnel effect diminishes somewhat with rougher surfaces (the chaotic nature of a rough surface 'scatters' the Fresnel effect, preventing the viewer from being able to clearly resolve it). Further, large or concave microsurface features can "trap" light &ndash; causing it to reflect against the surface multiple times, increasing absorption and reducing brightness. Different rendering systems handle these details in different ways and to different extents, but the broad trend of rougher surfaces appearing dimmer is the same.</p>
+      <p>This section only serves as a very basic and introductory lesson to the world of PBR. I won't be going in-depth on the math and science behind it as more links will be provided in the additional references section. However after reading this section, one should be familiar enough with how PBR works now to understand the rest of this document.</p>
+      <h3>Gloss Additional Info (<a href="https://www.google.com/url?q=http://seblagarde.wordpress.com/2011/08/17/feeding-a-physical-based-lighting-mode/&amp;sa=D&amp;ust=1571869491847000">source</a>)</h3>
+      <p>From my point of view, the most difficult texture to author is gloss. Reasons are as
+        follows:</p>
+      <ul>
+        <li>Specular power range deduced from gloss values is completely dependent of your engine.</li>
+        <li>A lot of the detail is contained here compared to the previous method wherein details were spread out through all the maps</li>
+        <li>Values are numerical, neither color nor vector.</li>
+      </ul>
+      <p>Details like scratches, pores, grooves, etc can be added even without them being in the normal map. Hence why this map is also referred to as microsurface.</p>
+    </section>
+    <hr>
+    <section>
+      <h1 id="h.q084qb6yyizu">Guidelines &amp; Basics: The How-To Guide</h1>
+      <p>This section will cover the basics of creating art in the PBR workflow. It will do its best to answer questions before you even have them. It won't get too technical however as that will be covered in another section if the need arises.</p>
+      <p>Artists who are unfamiliar with the concept of PBR systems often assume that content creation is drastically different, usually because of the terminology that is used. If you've worked with modern shaders and art creation techniques you already have experience with many of the concepts of a physically based rendering system.</p>
+      <p>Figuring out what type of content to create, or how to plug your content into a PBR shader can be confusing, so here are some common terms and concepts.</p>
+      <h2>Advances in Technology</h2>
+      <p>Since the conception of this encyclopedia back in 2014 there has been so many advances in technology and the production side of art, so much so that a lot of the how-to guide is outdated but I will still leave it in (partially to show what texturing was like pre-Painter and also just for those information junkies). From the Quixel suite making huge strides to Allegorithmic releasing newer and better tools for the pipeline (Substance Painter &amp; Designer), it's been easier than ever to have materials that resemble their real-world counterparts. But tread lightly as heading this also makes one's base knowledge of how to get to life-like materials weak. You're essentially pushing and pulling sliders, which is totally fine! It speeds up workflow and produces faster and better results, but sometimes it's nice to know where things started/came from. In spite of this, the Substance library makes it very easy to produce fantastic results with minimal effort (compared to before when one had to author each map individually, manually) but also leaves room for some faking of materials (maybe throwing up the metalness slider up to achieve a certain look). Just be wary and informed.</p>
+      <h3>Most Common Workflows</h3>
+      <ol>
+        <li>Albedo, Specular/Reflection, Roughness/Gloss, Normals, anything else (i.e. detail normals, separate AO/cavity, etc depending on need and shader)</li>
+        <li>Albedo/Specular in 1 map, Metalness, Roughness/Gloss, Normals, anything else like #1</li>
+        <li>Any other workflow is purely depicted by the project, studio, engine, etc.</li>
+      </ol>
+      <h2>Guidelines for Creating Different Materials (<a href="https://www.google.com/url?q=http://docs.cryengine.com/display/SDKDOC4/Physically%2BBased%2BRendering&amp;sa=D&amp;ust=1571869491849000">source</a>)</h2>
+      <p>The material substance is defined to a huge degree by the specular color. Use a reference table to pick the appropriate color for the desired material type.</p>
+      <h3>Non-Metals</h3>
+      <ul>
+        <li>Non-metal has monochrome/gray specular color. Never use colored specular for anything except certain metals unless certain of what you are doing</li>
+        <li>[Specular] The sRGB color range for most non-metal materials is usually between 40 and 60. It should never be higher than 80/80/80.</li>
+        <li>A good clean diffuse map is required.</li>
+      </ul>
+      <h3>Metals</h3>
+      <ul>
+        <li>The specular color for metal should always be above sRGB 180.</li>
+        <li>Metal can have colored specular highlights (for gold and copper for example).</li>
+        <li>Metal has a black or very dark diffuse color.</li>
+      </ul>
+      <h2>Energy Conservation (<a class="c7" href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23energy&amp;sa=D&amp;ust=1571869491851000">source</a>)</h2>
+      <p>The concept of energy conservation states that an object can not reflect more light than it receives.
+        <br>
+        <br>
+        <img src="images/image25.jpg" alt="energy conservation" style="width: 775.50px; height: 120.81px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);">
+        <br>
+        <br>
+      </p>
+      <p>For practical purpose, more diffuse and rough materials will reflect dimmer and wider highlights, while smoother and more reflective materials will reflect brighter and tighter highlights.</p>
+      <h3>Diffuse/Albedo (<a href="https://www.google.com/url?q=http://docs.cryengine.com/display/SDKDOC4/Physically%2BBased%2BRendering&amp;sa=D&amp;ust=1571869491852000">source</a>)</h3>
+      <p>Diffuse/Albedo maps are generally gamma space and are quite flat colour wise.</p>
+      <p>Albedo is pure colour, no lighting information baked in like we used to do with diffuse maps. (<a href="https://www.google.com/url?q=http://wiki.polycount.com/PBR&amp;sa=D&amp;ust=1571869491853000">source</a>)</p>
+      <p>The diffuse color defines how bright a surface is when lit directly by a white light source with an intensity of 100%. More physically speaking, it defines which percentage for each component of the RGB spectrum does not get absorbed when light scatters underneath the surface. A diffuse map is always required. In most cases the diffuse color in the material editor should be set to white (255/255/255).</p>
+      <p>For pure metal materials, the diffuse color should be black as explained before. Rusty metal/oxidation however needs some diffuse color.</p>
+      <p>Please note the values below are a little outdated. (<a href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23albedo&amp;sa=D&amp;ust=1571869491854000">source</a>)
+        <br>
+        <br>
+        <img src="images/image10.jpg" alt="Albedo" style="width: 727.50px; height: 277.90px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);">
+        <br>
+        <br>
+      </p>
+      <p>An albedo map defines the color of diffused light. One of the biggest differences between an albedo map in a PBR system and a traditional diffuse map is the lack of directional light or ambient occlusion. Directional light will look incorrect in certain lighting conditions, and ambient occlusion should be added in the separate AO slot.</p>
+      <p>The albedo map will sometimes define more than the diffuse color as well, for instance, when using a metalness map, the albedo map defines the diffuse color for insulators (non-metals) and reflectivity for metallic surfaces.</p>
+      <h3>Specular/Reflection/Reflectivity (<a href="https://www.google.com/url?q=http://docs.cryengine.com/display/SDKDOC4/Physically%2BBased%2BRendering&amp;sa=D&amp;ust=1571869491856000">source</a>) (<a href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23refl&amp;sa=D&amp;ust=1571869491856000">source 2</a>)</h3>
+      <p>Specular/Reflection/Reflectivity maps generally are Gamma space.</p>
+      <p>Reflectance is again, a measured value for a material. there are plenty of sources online which you can get the measured reflective colours for various materials. Typically speaking, most non-metals fall into a white 0.04 range (linear), while metals (having no albedo and being pure reflection) have much higher, coloured reflectance. (<a href="https://www.google.com/url?q=http://wiki.polycount.com/PBR&amp;sa=D&amp;ust=1571869491857000">source</a>)</p>
+      <p>Reflectivity is the percentage of light a surface reflects. All types of reflectivity (aka base reflectivity or F0) inputs, including specular, metalness, and IOR, define how reflective a surface is when viewing head on, while Fresnel defines how reflective a surface is at grazing angles.</p>
+      <p>A spec map won't be needed to directly set reflectivity (when using metalness workflow) but is still required in the alternative workflow. The spec map is combined with your diffuse in the form of the albedo map in the metalness workflow.</p>
+      <p>Specular color is a physical value now which is constant for a single type of material. So in essence, it will look quite flat compared to pre-PBR spec maps.</p>
+      <p>The specular color defines how much light gets reflected immediately from the surface when the light source is directly above the surface. This is the minimum specular intensity, under grazing angles it will increase due to the Fresnel effect. As the specular color is specific for a certain type of material, it can also be considered as a mask for the type of material/substance. The specular color is a physical value which should be picked directly from a reference table. As such, it does not leave much artistic freedom.</p>
+      <p>Please note the values below are a little outdated. (<a href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23refl&amp;sa=D&amp;ust=1571869491858000">source</a>)
+        <br>
+        <br>
+        <img src="images/image9.png" alt="Reflectivity" style="width: 796.00px; height: 304.00px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);">
+        <br>
+        <br>
+      </p>
+      <p>Its important to note how narrow the
+        range of reflectivity is for insulative (non-metal) materials (see below).
+        Combined with the concept of energy
+        conservation it's easy to conclude that surface variation should generally be represented in the
+        microsurface map, not the reflectivity map. For a given material type, reflectivity tends to remain fairly constant.
+        Reflection color tends to be neutral/white for insulators, and
+        colored only for metals. Thus, a map specifically dedicated to reflectivity
+        intensity/color (commonly called a specular map) may be dropped in favor of a metalness map.
+        <br>
+        <br>
+        <img src="images/image8.png" alt="Specular vs. metalness" style="width: 432.21px; height: 371.00px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);">
+        <br>
+        <br>
+      </p>
+      <p>Traditional specular maps offer more control over the the specular intensity and color, and allow greater flexibility when trying to reproduce certain complex materials. The main drawback to a specular map is that it generally will be saved as a 24 bit file resulting in more memory use. It also requires artists to have a very good understanding of physical material properties to get the values right, which can be a positive or negative depending on your perspective.</p>
+      <p>Most non-metals reflect 2% to 5% of the light as specular and the highlight is monochrome/gray. As the variation is so little, it is often enough to use a constant specular color instead of a specular texture map. However, if metal and non-metal are mixed in a single texture, it is required to use a specular map, as metal has a much brighter specular color than non-metal. If a specular map is used, the specular color in the material editor should be set to white which is 255/255/255, as it gets multiplied with the values from the specular map and would otherwise lower the physical values from the map.</p>
+      <h3>Index of Refraction (IOR) (<a href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23refl&amp;sa=D&amp;ust=1571869491860000">source</a>)</h3>
+      <p>IOR is another way to define reflectivity, and is equivalent to the specular and metalness inputs. The biggest difference from the specular input is that IOR values are defined with a difference scale. The IOR scale determines how fast light travels through a material in relation to a vacuum. An IOR value of 1.33 (water) means that light travels 1.33 times slower through water than it does the empty vacuum of space. You can find more measured values in the <a href="https://www.google.com/url?q=http://www.filmetrics.com/refractive-index-database&amp;sa=D&amp;ust=1571869491860000">Filmetrics Refractive Index Database</a>.</p>
+      <p>Insulators (non-metal), IOR values do not require color information, and can be entered into the index field directly, while the extinction field should be set to 0.</p>
+      <p>Metals that have color reflections, will need a value for the red, green and blue channels. This can be done with an image map input (where each channel of the map contains the correct value). The extinction value will also need to be set for metals, which you can usually find in libraries that contain IOR values.</p>
+      <p>Using IOR as opposed to specular or metalness input is generally not advised, as it is not typically used in games, and getting the correct value in a texture with multiple material types is difficult. IOR input is supported in Toolbag 2 more for scientific purposes than practical.</p>
+      <h3>Metalness (<a href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23refl&amp;sa=D&amp;ust=1571869491861000">source</a>)</h3>
+      <p>Metalness maps generally are Gamma space.</p>
+      <p>A metalness map is not more or less physically accurate than a standard specular map. It is, however, a concept that may be easier to understand, and a metalness map can be packed into a grayscale slot to save memory. The drawback to using a metalness map over a specular map is a loss of control over the exact values for insulative materials. (refer to the above image)</p>
+      <h2>Protips (<a href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23refl&amp;sa=D&amp;ust=1571869491863000">source</a>)</h2>
+      <h3>When using a metalness map: </h3>
+      <p>Insulative surfaces - pixels set to 0.0 (black) in the metalness map &ndash; are assigned a fixed reflectance value (linear: 0.04 sRGB: 0.06) and use the albedo map for the diffuse value.</p>
+      <p>Metallic surfaces &ndash; pixels set to 1.0 (white) in the metalness map &ndash; the specular color and intensity is taken from the albedo map, and the diffuse value is set to 0 (black) in the shader. Gray values in the metalness map will be treated as partially metallic and will pull the reflectivity from the albedo and darken the diffuse proportionally to that value (partially metallic materials are uncommon).</p>
+      <p>Metalness maps should use values of 0 or 1 ( some gradation can be okay for transitions). Materials like painted metal should not be set to metallic as paint is an insulator. The metalness value should represent the top layer of the material.</p>
+    </section>
+  </main>
+  <p><span class="c24">Marmoset Earthquake's testimonial </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showpost.php?p%3D1961639%26postcount%3D762&amp;sa=D&amp;ust=1571869491865000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c1">So the way the metalness thing works is basically this:</span></p>
+  <p><span class="c14">A.</span><span class="c1"> Your albedo map is both your diffuse and spec
+      map</span></p>
+  <p><span class="c14">B. </span><span class="c1">The metanless map defines which sections are metal and
+      which are not. But what its really doing is the more metal it is, the more it darkens the diffuse and pulls
+      the specular intensity and color from the albedo. Black values in the metalness map represent non-metals,
+      and for those, a low, fixed specular intensity is used (I don't remember the value off hand).</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">However, If you use mid-values in the metalness mask you can sort of hack it into
+      doing what you want. You don't need to stick to black or white. But then it will pull the spec color
+      from there as well, which works for things like Christmas ornaments, but not really for glossy
+      plastics.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">But really, if you want fine control over the specular color and specular intensity
+      for non-metals, you shouldn't be using the metalness function, you should use the standard blinn-phong,
+      as that will let you do exactly that. With energy conservation on, and a bright spec intensity value with
+      blinn-phong, it will basically work the same as the metalness thing (ie: it will darken the diffuse to make
+      it appear more metal-ish)</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c24">Is Metalness Map a requirement? </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice&amp;sa=D&amp;ust=1571869491866000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c15">No, a metalness map is </span><span class="c14">just one method </span><span class="c15">of
+      determining reflectivity and is generally not more or less physically accurate than using a
+      specular color/intensity map.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">If a metalness map is used, the spec and albedo maps are combined into one, thus the
+      need for a separate spec map is negated. </span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c23 c37 c38">Gloss/Roughness/Microsurface</span><span class="c24 c37"> </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://docs.cryengine.com/display/SDKDOC4/Physically%2BBased%2BRendering&amp;sa=D&amp;ust=1571869492013000">source</a></span><span class="c9">) (</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23micro&amp;sa=D&amp;ust=1571869492013000">source
+        2</a></span><span class="c9">)</span></p>
+  <p><span class="c14">Gloss/Roughness/Microsurface </span><span class="c15">maps </span><span class="c15">should
+      generally be linear space (sRGB off), but its not a big deal if you use sRGB/Gamma
+      space.</span></p>
+  <p><span class="c1">Gloss defines the roughness/smoothness of a surface. </span></p>
+  <p><span class="c15">Roughness is calculated in a specifically measure way and requires 0 - 1 input only.
+    </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://wiki.polycount.com/PBR&amp;sa=D&amp;ust=1571869492014000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">Typically all the detail is located here. Scratches, wear, finger prints, etc
+      are located in this map. It is more or less the same pre-PBR.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">A a low gloss value means that the surface is rough while a high value means the
+      surface is very smooth and shiny. The roughness influences the size and the intensity of specular
+      highlights. The smoother/glossier a surface is, the smaller the specular highlight will be. A more
+      narrow/smaller highlight will at the same time be brighter in order to obey to the rules of energy
+      conservation.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">A gloss map is used and creates interesting and plausible variation on the specular
+      highlights.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c15">Most materials should have a gloss map, as it can give a lot of good variation to
+      the shading. Gloss is closely related to normal maps, as high frequency details in a normal can create some
+      feeling of roughness as well. However, gloss is more the micro-scale roughness of the material.</span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 620.00px; height: 103.00px;"><img alt="" src="images/image14.png" style="width: 620.00px; height: 103.00px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c9 c64 c40 c42 c51 c87">Note how the specular highlight becomes smaller and brighter with
+      an increasing gloss value, making the material look smoother (Image Source: Real-Time Rendering)</span></p>
+  <p><span class="c87 c9 c64 c40 c42 c51"></span></p>
+  <p><span class="c14 c40 c42">Please note the values below are a little outdated. </span><span class="c9 c40 c42">(</span><span class="c34 c9 c42"><a class="c7" href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23micro&amp;sa=D&amp;ust=1571869492016000">source</a></span><span class="c9 c40 c42">)</span></p>
+  <p class="c49 c100"><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 748.78px; height: 285.50px;"><img alt="microsurface" src="images/image30.jpg" style="width: 748.78px; height: 285.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c15">Here we see the how the principles of energy conservation are affected by the
+      microsurface of the material, </span><span class="c14">rougher </span><span class="c15">surfaces will show
+    </span><span class="c14">wider</span><span class="c15">, </span><span class="c14">but dimmer </span><span class="c15">specular reflections while </span><span class="c14">smoother </span><span class="c15">surfaces
+      will show </span><span class="c14">brighter</span><span class="c15">,</span><span class="c14"> but
+      sharper </span><span class="c1">specular reflections.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c15">Depending on what engine you're authoring content for, your texture may be
+      called a roughness map instead of a gloss map. In practice there is little difference between these two
+      types, though a </span><span class="c14">roughness map may have an inverted mapping</span><span class="c1">,
+      ie: dark values equal glossy/smooth surfaces while bright values equal rough/matte surfaces. By default,
+      Toolbag expects white to define the smoothest surfaces while black defines roughest surfaces, if
+      you're loading a gloss/roughness map with an inverted scale, click the invert check box in the gloss
+      module.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c23 c37 c38">Ambient Occlusion </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23ao&amp;sa=D&amp;ust=1571869492017000">source</a></span><span class="c26 c9">)</span><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 208.50px; height: 208.50px;"><img alt="" src="images/image7.png" style="width: 208.50px; height: 208.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c1">Ambient occlusion(AO) represents large scale occluded light and is generally baked
+      from a 3d model.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c15">Adding </span><span class="c14">AO </span><span class="c15">as a </span><span class="c14">separate map</span><span class="c1"> as opposed to baking it into the albedo and specular
+      maps allows the shader to use it in a more intelligent way. For instance, the AO function only occludes
+      ambient diffuse light (the diffuse component of the image based lighting system in Toolbag 2), not direct
+      diffuse light from dynamic lights or specular reflections of any kind.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">AO should generally not be multiplied on to specular or gloss maps. Multiplying AO
+      onto the specular map may have been a common technique in the past to reduce inappropriate reflections (e.g.
+      the sky reflecting on an occluded object) but these days local screen space reflections do a much better job
+      of representing inter-object reflections.</span></p>
+  <p><span class="c26 c9"></span></p>
+  <p><span class="c26 c9"></span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c23 c37 c38">Cavity </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23cavity&amp;sa=D&amp;ust=1571869492019000">source</a></span><span class="c26 c9">)</span><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 201.50px; height: 201.50px;"><img alt="" src="images/image17.png" style="width: 201.50px; height: 201.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c1">A cavity map represents small scale occluded light and is generally baked from a 3d
+      model or a normal map. An easy and painless way of creating a cavity map would be by using NDO2 wherein it
+      generates it via a normal map.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c15">A cavity map should only contain the concave areas (pits) of the surface, and not
+      the convex areas, as the </span><span class="c14">cavity map is multiplied</span><span class="c15">. The
+      content should be mostly white with darker sections to represent the recessed areas of the surface where
+      light would get trapped. The </span><span class="c21 c14">cavity map affects both diffuse and specular from
+      ambient and dynamic light sources.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c14">Alternatively</span><span class="c1">, a reflection occlusion map can be loaded into
+      the cavity slot, but be sure to set the diffuse cavity value to 0 when doing this.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c23 c37 c38">Linear Lighting - Linear Intensity Response </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://docs.unity3d.com/Manual/LinearLighting.html&amp;sa=D&amp;ust=1571869492021000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c40 c15">When you are using gamma space lighting, the colors and textures that are
+      supplied to a shader have a gamma correction applied to them. When they are used in a shader the colors of
+      high luminance are actually brighter than they should be for linear lighting. This means that as light
+      intensity increases the surface will get brighter in a non linear way. This leads to lighting that can be
+      too bright in many places, and can also give models and scenes a washed-out feel. When you are using linear
+      lighting, the response from the surface remains linear as the light intensity increases. This leads to much
+      more realistic surface shading and a much nicer color response in the surface.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c15">Typically PBR shaders use Linear Colour Space.</span><span class="c23 c37 c38">
+    </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showpost.php?p%3D2088119%26postcount%3D14&amp;sa=D&amp;ust=1571869492021000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c23 c37 c38">Example of Texture Maps </span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 796.00px; height: 265.33px;"><img alt="Cerberus-Flats.jpg" src="images/image27.jpg" style="width: 796.00px; height: 265.33px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c15">Please note the metalness map approach was used in this scenario. </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.artisaverb.info/PBT.html&amp;sa=D&amp;ust=1571869492022000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c1"></span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 681.50px; height: 681.50px;"><img alt="" src="images/image11.png" style="width: 681.50px; height: 681.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c15">Please note the specular map workflow was used in this scenario. </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice&amp;sa=D&amp;ust=1571869492023000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c23 c37 c38">Creating Texture Content </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23create&amp;sa=D&amp;ust=1571869492024000">source</a></span><span class="c9">)</span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 776.50px; height: 429.00px;"><img alt="" src="images/image18.png" style="width: 776.50px; height: 429.00px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 6.00px solid #dce7de; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 178.50px; height: 405.89px;"><img alt="psd01" src="images/image12.jpg" style="width: 178.50px; height: 405.89px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c1">There are many ways to create texture content for PBR systems; the exact method you
+      choose will depend on your personal preferences and what software you have available to you. Here is a quick
+      recap of the method I used to create the lens above:</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">First, basic materials were created in Toolbag for each surface type using a
+      combination of tiling textures from Megascans, measured data from known materials, and where lacking
+      appropriate reference, logic and observation, to determine the values. Creating the base materials in
+      Toolbag allows me to quickly adjust values and offers a very accurate preview of the end result. </span></p>
+  <p><span class="c21 c14"></span></p>
+  <p><span class="c14">Tip: </span><span class="c1">Often I assign base materials directly to my high poly
+      model to get a clear idea of how the texture will come together before doing the final bakes.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">After setting up my base materials I brought the values and textures into Photoshop
+      and started layering them in a logical manner. Brass at the bottom, nickel plating, matte primer, semi-gloss
+      textured paint, paint for the lettering, and finally the red glossy plastic. This layering setup provides an
+      easy way to reveal the various materials below with simple masks.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">After I have my base layers set up and blended together to represent various stages
+      of wear, I added some extra details. First I used dDo to generate a dust and dirt pass, and then I finished
+      it off with fine surface variation in the gloss map.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">The exact method you use to create content for a PBR system is much less important
+      than the end result, so feel free to experiment and figure out what works best for your needs. However, you
+      should void tweaking materials values to look more interesting in a specific lighting environment. Using
+      sound base values for your materials can greatly simplify the process, increase consistency and asset reuse
+      on larger projects, and will ensure that your assets always look great no matter how you light them.</span>
+  </p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1"></span></p>
+  <hr>
+  <p><span class="c1"></span></p>
+  <h1 id="h.he2pxwn2p5v7"><span class="c5">Material Reference Values</span></h1>
+  <p><span class="c15">Should be considered as a </span><span class="c14">general/base guideline and not
+      the absolute/only value</span><span class="c15">. This is because of various real world conditions,
+      weathering, age, purity of material, etc. Some values will contradict each other (ex. water). Select
+      or play with the present values and adjust accordingly, depending on the shader/engine you are using.
+    </span><span class="c21 c14"> </span></p>
+  <p><span class="c15">Refraction Index of Various Substances for 3D Modelers - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.robinwood.com/Catalog/Technical/Gen3DTuts/Gen3DPages/RefractionIndexList.html&amp;sa=D&amp;ust=1571869492026000">click
+        here</a></span></p>
+  <p><span class="c21 c14"></span></p>
+  <p><span class="c21 c14">Lastly take special consideration of the colour space for each respective
+      value.</span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 582.01px; height: 266.50px;"><img alt="" src="images/image26.png" style="width: 582.01px; height: 266.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23finding&amp;sa=D&amp;ust=1571869492027000">above
+        source</a></span><span class="c9">)</span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c23 c37 c38">Base Colour </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=https://google.github.io/filament/Material%2520Properties.pdf&amp;sa=D&amp;ust=1571869492027000">source</a></span><span class="c26 c9">)</span></p>
+  <p><span class="c15">Another chart for base colours. Note that depending on the engine (this is
+      based on </span><span class="c14">Google's </span><span class="c15">new </span><span class="c14">Filament
+      renderer</span><span class="c1">), the values may differ slightly.</span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 791.00px; height: 566.50px;"><img alt="" src="images/image3.png" style="width: 791.00px; height: 566.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c23 c37 c38">Metallic </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=https://google.github.io/filament/Material%2520Properties.pdf&amp;sa=D&amp;ust=1571869492028000">source</a></span><span class="c26 c9">)</span></p>
+  <p><span class="c15">Another chart for base colours. Note that depending on the engine (this is
+      based on </span><span class="c14">Google's </span><span class="c15">new </span><span class="c14">Filament
+      renderer</span><span class="c15">), the values may differ slightly.</span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 791.00px; height: 283.50px;"><img alt="" src="images/image5.png" style="width: 791.00px; height: 283.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c23 c37 c38">Roughness </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=https://google.github.io/filament/Material%2520Properties.pdf&amp;sa=D&amp;ust=1571869492028000">source</a></span><span class="c26 c9">)</span></p>
+  <p><span class="c15">Another chart for base colours. Note that depending on the engine (this is
+      based on </span><span class="c14">Google's </span><span class="c15">new </span><span class="c14">Filament
+      renderer</span><span class="c1">), the values may differ slightly.</span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 790.00px; height: 405.50px;"><img alt="" src="images/image38.png" style="width: 790.00px; height: 405.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c23 c37 c38">Reflectance (spec) </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=https://google.github.io/filament/Material%2520Properties.pdf&amp;sa=D&amp;ust=1571869492029000">source</a></span><span class="c26 c9">)</span></p>
+  <p><span class="c15">Another chart for base colours. Note that depending on the engine (this is
+      based on </span><span class="c14">Google's </span><span class="c15">new </span><span class="c14">Filament
+      renderer</span><span class="c1">), the values may differ slightly.</span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 790.00px; height: 452.50px;"><img alt="" src="images/image39.png" style="width: 790.00px; height: 452.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c23 c37 c38">Anisotropy </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=https://google.github.io/filament/Material%2520Properties.pdf&amp;sa=D&amp;ust=1571869492030000">source</a></span><span class="c26 c9">)</span></p>
+  <p><span class="c15">Another chart for base colours. Note that depending on the engine (this is
+      based on </span><span class="c14">Google's </span><span class="c15">new </span><span class="c14">Filament
+      renderer</span><span class="c1">), the values may differ slightly.</span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 790.00px; height: 273.50px;"><img alt="" src="images/image2.png" style="width: 790.00px; height: 273.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c23 c37 c38">Clear Coat &amp; Clear Coat Roughness </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=https://google.github.io/filament/Material%2520Properties.pdf&amp;sa=D&amp;ust=1571869492030000">source</a></span><span class="c26 c9">)</span></p>
+  <p><span class="c15">Another chart for base colours. Note that depending on the engine (this is
+      based on </span><span class="c14">Google's </span><span class="c15">new </span><span class="c14">Filament
+      renderer</span><span class="c1">), the values may differ slightly.</span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 789.00px; height: 644.00px;"><img alt="" src="images/image20.png" style="width: 789.00px; height: 644.00px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c23 c37 c38">Specular Colour </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://docs.cryengine.com/display/SDKDOC4/Physically%2BBased%2BRendering&amp;sa=D&amp;ust=1571869492031000">source</a></span><span class="c9">)</span></p><a id="t.6028cd8d86b71ce67278df32aa549a8670385564"></a><a id="t.1"></a>
+  <table class="c45">
+    <tbody>
+      <tr class="c18">
+        <td class="c39" colspan="1" rowspan="1">
+          <p class="c58 c49"><span class="c14 c40 c81">Material</span></p>
+        </td>
+        <td class="c57" colspan="1" rowspan="1">
+          <p class="c49 c58"><span class="c14 c40 c81">sRGB Color</span></p>
+        </td>
+        <td class="c76" colspan="1" rowspan="1">
+          <p class="c58 c49"><span class="c14 c40 c81">Linear (Blend Layer)</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">Water</span></p>
+        </td>
+        <td class="c27" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">38 38 38</span></p>
+        </td>
+        <td class="c0" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">0.02</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">Skin</span></p>
+        </td>
+        <td class="c27" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">51 51 51</span></p>
+        </td>
+        <td class="c0" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">0.03</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">Hair</span></p>
+        </td>
+        <td class="c27" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">65 65 65</span></p>
+        </td>
+        <td class="c0" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">0.05</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">Plastic / Glass (Low)</span></p>
+        </td>
+        <td class="c27" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">53 53 53</span></p>
+        </td>
+        <td class="c0" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">0.03</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">Plastic High</span></p>
+        </td>
+        <td class="c27" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">61 61 61</span></p>
+        </td>
+        <td class="c0" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">0.05</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">Glass (High) / Ruby</span></p>
+        </td>
+        <td class="c27" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">79 79 79</span></p>
+        </td>
+        <td class="c0" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">0.08</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">Diamond</span></p>
+        </td>
+        <td class="c27" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">115 115 115</span></p>
+        </td>
+        <td class="c0" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">0.17</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">Iron</span></p>
+        </td>
+        <td class="c27" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">196 199 199</span></p>
+        </td>
+        <td class="c0" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">0.57</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">Copper</span></p>
+        </td>
+        <td class="c27" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">250 209 194</span></p>
+        </td>
+        <td class="c0" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">N/A</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">Gold</span></p>
+        </td>
+        <td class="c27" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">255 219 145</span></p>
+        </td>
+        <td class="c0" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">N/A</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">Aluminum</span></p>
+        </td>
+        <td class="c27" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">245 245 247</span></p>
+        </td>
+        <td class="c0" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">0.91</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">Silver</span></p>
+        </td>
+        <td class="c27" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">250 247 242</span></p>
+        </td>
+        <td class="c0" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">N/A</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c65" colspan="1" rowspan="1">
+          <p class="c16"><span class="c46 c40 c15 c42 c51">If a non-metal material is not in the list, use a
+              value between 45 and 65.</span></p>
+        </td>
+        <td class="c75" colspan="1" rowspan="1">
+          <p class="c16 c6"><span class="c46 c14 c40 c42"></span></p>
+        </td>
+        <td class="c97" colspan="1" rowspan="1">
+          <p class="c16 c6"><span class="c46 c14 c40 c42"></span></p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p><span class="c21 c14"></span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 650.50px; height: 555.81px;"><img alt="" src="images/image1.png" style="width: 650.50px; height: 555.81px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://docs.cryengine.com/display/SDKDOC4/Physically%2BBased%2BRendering&amp;sa=D&amp;ust=1571869492043000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c3"></span></p>
+  <h2 class="c32 c49" id="h.xr0kumhyjves"><span class="c23 c51 c37 c64">UE4 Differences</span><span class="c64 c15 c51">
+    </span><span class="c9 c64 c51">(</span><span class="c34 c64 c15 c51"><a class="c7" href="https://www.google.com/url?q=https://docs.unrealengine.com/latest/INT/Engine/Rendering/Materials/PhysicallyBased/index.html&amp;sa=D&amp;ust=1571869492043000">source</a></span><span class="c9 c64 c51">) (</span><span class="c34 c64 c15 c51"><a class="c7" href="https://www.google.com/url?q=http://seblagarde.wordpress.com/2014/04/14/dontnod-physically-based-rendering-chart-for-unreal-engine-4/&amp;sa=D&amp;ust=1571869492044000">source
+        2</a></span><span class="c9 c64 c51">)</span></h2>
+  <p><span class="c15">The chart has been design for Dontnod team and with UE4 conventions for textures
+      based on the Disney "principled" BRDF use in the Unreal engine 4. </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://seblagarde.wordpress.com/2014/04/14/dontnod-physically-based-rendering-chart-for-unreal-engine-4/&amp;sa=D&amp;ust=1571869492044000">source</a></span><span class="c9">)</span><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 440.00px; height: 643.50px;"><img alt="" src="images/image34.png" style="width: 440.00px; height: 643.50px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c21 c14"></span></p>
+  <p><span class="c1">So UE4 uses slightly different parameters and handles maps a little differently
+      compared to other shaders/engines. In this section I will illustrate those points.</span></p>
+  <p><span class="c1">Base colour, roughness, metallic, and specular inputs take 0 to 1 values.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c24">Porosity</span></p>
+  <p><span class="c15">The Dontnod chart include an unusual parameter named </span><span class="c14">Porosity</span><span class="c15">. This parameter is the "open porosity" of a
+      material. It can be used for driving weathering and aging effect (Pollution, rain, aging&hellip;). More
+      details on its usage can be found in previous blog post: </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://seblagarde.wordpress.com/2013/03/19/water-drop-3a-physically-based-wet-surfaces/&amp;sa=D&amp;ust=1571869492045000">Water
+        drop 3a &ndash; Physically based wet surfaces</a></span><span class="c15"> and </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://seblagarde.wordpress.com/2013/04/14/water-drop-3b-physically-based-wet-surfaces/&amp;sa=D&amp;ust=1571869492046000">Water
+        drop 3b &ndash; Physically based wet surfaces</a></span><span class="c1">. In practice Dontnod use it
+      mainly with the dynamic wet formula provided in the mentionned previous post.</span></p>
+  <p><span class="c1">The range is remapped from 0-1 to 0-70% of open porosity. There is real worl image to
+      try to give a feeling of what the value mean. An extremely porous material is the clay (70%), but open
+      porosity can vary a lot for same material, clay could also be only 50%.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12"></span></p>
+  <p><span class="c12">Base Colour</span></p>
+  <p><span class="c15">Base Color simply </span><span class="c14">defines </span><span class="c15">the
+    </span><span class="c14">overall color </span><span class="c1">of the Material. It takes in a Vector3 (sRGB
+      0-255) value and each channel is automatically clamped between 0 and 1.</span></p>
+  <p><span class="c15">If taken from the real world, this is the color when photographed using a polarizing
+      filter (polarization removes the specular of nonmetals when aligned).</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c15">Measured BaseColour values for </span><span class="c14">nonmetals </span><span class="c15">(</span><span class="c14">intensity</span><span class="c15"> </span><span class="c14">only</span><span class="c1">):</span></p><a id="t.6966f88a90c777cd192f6505a7cff3b18d6b4c35"></a><a id="t.2"></a>
+  <table class="c45">
+    <tbody>
+      <tr class="c18">
+        <td class="c82" colspan="1" rowspan="1">
+          <p class="c16"><span class="c21 c14">Material</span></p>
+        </td>
+        <td class="c93" colspan="1" rowspan="1">
+          <p class="c16"><span class="c21 c14">BaseColor Intensity</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c78 c42" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Charcoal</span></p>
+        </td>
+        <td class="c47" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.02</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c78 c42" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Fresh asphalt</span></p>
+        </td>
+        <td class="c47" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.02</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c42 c78" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Worn asphalt</span></p>
+        </td>
+        <td class="c47" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.08</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c78 c42" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Bare soil</span></p>
+        </td>
+        <td class="c47" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.13</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c78 c42" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Green grass</span></p>
+        </td>
+        <td class="c47" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.21</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c78 c42" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Desert sand</span></p>
+        </td>
+        <td class="c47" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.36</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c78 c42" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Fresh concrete</span></p>
+        </td>
+        <td class="c47" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.51</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c78 c42" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Ocean Ice</span></p>
+        </td>
+        <td class="c47" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.56</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c31" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Fresh snow</span></p>
+        </td>
+        <td class="c94" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.81</span></p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p><span class="c1"></span></p>
+  <p><span class="c15">Measured BaseColours for </span><span class="c14">metals</span><span class="c1">:</span></p><a id="t.d7dee6bb8fe19e5f57e3b2939ecb02b6b690ae72"></a><a id="t.3"></a>
+  <table class="c45">
+    <tbody>
+      <tr class="c18">
+        <td class="c101" colspan="1" rowspan="1">
+          <p class="c16"><span class="c21 c14">Material</span></p>
+        </td>
+        <td class="c91" colspan="1" rowspan="1">
+          <p class="c16"><span class="c21 c14">BaseColor (R, G, B)</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c25" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Iron</span></p>
+        </td>
+        <td class="c41" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">(0.560, 0.570, 0.580)</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c25" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Silver</span></p>
+        </td>
+        <td class="c41" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">(0.972, 0.960, 0.915)</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c25" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Aluminum</span></p>
+        </td>
+        <td class="c41" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">(0.913, 0.921, 0.925)</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c25" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Gold</span></p>
+        </td>
+        <td class="c41" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">(1.000, 0.766, 0.336)</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c25" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Copper</span></p>
+        </td>
+        <td class="c41" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">(0.955, 0.637, 0.538)</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c25" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Chromium</span></p>
+        </td>
+        <td class="c41" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">(0.550, 0.556, 0.554)</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c25" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Nickel</span></p>
+        </td>
+        <td class="c41" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">(0.660, 0.609, 0.526)</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c25" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Titanium</span></p>
+        </td>
+        <td class="c41" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">(0.542, 0.497, 0.449)</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c25" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Cobalt</span></p>
+        </td>
+        <td class="c41" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">(0.662, 0.655, 0.634)</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c42 c98" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Platinum</span></p>
+        </td>
+        <td class="c90" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">(0.672, 0.637, 0.585)</span></p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">The diffuse part of the base color (the one use by the non-metallic) must be in the
+      range of the first gradient 50-243. There is some sample values of real world material in sRGB below the
+      gradient. Some of these values are base on real world measured material (from misc sources, not done by us)
+      and other are have been generated by Laurent Harduin. He take calibrated raw picture of representative
+      material, take the luminance histogram in Photoshop and use the value of the medium axis for the luminance.
+      Then he blur the picture and take one pixel inside the blurred region and use that as the color value. This
+      explain why in few case like the clean cement the color and the luminance doesn't match perfectly. We
+      also lower a bit the value to take into account the invevitable specular present during the capture.</span>
+  </p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">The reflectance part (the one use by metallic) must be in the range 186-255 (not
+      present in the chart). Some example are provided below the grey square. Most of the time the metallic color
+      of material match what the eye see.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">Here is another example of base colour ranges</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c12">Roughness</span></p>
+  <p><span class="c15">The Roughness input literally </span><span class="c14">controls how rough the
+      Material is</span><span class="c1">. A rough Material will scatter reflected light in more directions than a
+      smooth Material. This can be seen in how blurry or sharp the reflection is or in how broad or tight the
+      specular highlight is. Roughness of 0 (smooth) is a mirror reflection and roughness of 1 (rough) is
+      completely matte or diffuse.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c26 c9">(please refer to the above image as reference)</span></p>
+  <p><span class="c1">The gradient display roughness from 0 for smooth (left) material to 1 for rough
+      material (right).</span></p>
+  <p><span class="c1">The grey gradient are from 0 to 255 and red segments are displayed every 1/10
+      with a sphere like object below to show the in-game result of the designated value.</span></p>
+  <p><span class="c1">The first row of real world image above represent no metallic object, the second row
+      represent metallic object. Goal is to give artist a better feeling of what is roughness.</span></p>
+  <p><span class="c1">The first row of sphere like object represent metallic object, the second row
+      represent non-metallic object.</span></p>
+  <p><span class="c1">Note: The roughness here is coupled with the BRDF used by the Unreal engine 4, it may
+      not be compatible with other engine or offline renderer.</span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 720.00px; height: 84.00px;"><img alt="" src="images/image22.png" style="width: 720.00px; height: 84.00px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 720.00px; height: 81.00px;"><img alt="" src="images/image33.png" style="width: 720.00px; height: 81.00px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c1">Roughness 0 to 1. Nonmetal top, metal bottom.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">Roughness is a property that will frequently be mapped on your objects, in order to
+      add the most physical variation to the surface.</span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 796.00px; height: 325.33px;"><img alt="" src="images/image19.png" style="width: 796.00px; height: 325.33px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c9">If you have been making Materials in previous iterations of the Unreal Engine and are
+      not accustomed to physically-based Materials, keep in mind that </span><span class="c14 c73">Roughness
+    </span><span class="c9">maps are where you will </span><span class="c14 c73">handle most of your
+      Specularity</span><span class="c9 c26"> texturing.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c12">Metallic</span></p>
+  <p><span class="c15">The Metallic input literally controls how &quot;metal-like&quot; your surface will
+      be. Nonmetals have Metallic values of 0, metals have Metallic values of 1. For</span><span class="c14"> pure
+      surfaces</span><span class="c15">, such as pure metal, pure stone, pure plastic, etc.
+      this value will be </span><span class="c14">0 or 1</span><span class="c15">, not anything in between. When
+      creating</span><span class="c14"> hybrid surfaces</span><span class="c15"> like corroded, dusty,
+      or rusty metals, you may find that you need some value</span><span class="c14"> between 0 and
+      1</span><span class="c1">.</span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 720.00px; height: 81.00px;"><img alt="" src="images/image32.png" style="width: 720.00px; height: 81.00px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c12">Specular (Reflectance)</span></p>
+  <p><span class="c15">T</span><span class="c1">he Specular input should not be connected and left as
+      it's default value of 0.5 for most cases.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c14 c64 c73 c83">There is no chart for the reflectance value of the Unreal engine 4, just
+      let the value by default and apply a cavity map on it.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c15">It is value between 0 and 1 and is used to scale the current amount of specularity
+      on non-metallic surfaces. It has </span><span class="c14">no effect on metals</span><span class="c1">.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c26 c9">For very diffuse Materials, you may be inclined to set this to zero. Resist! All
+      Materials have specular. What you really want to do for very diffuse Materials is make them rough.</span>
+  </p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">Commonly, if we modify Specular, we do so to add micro occlusion or small scale
+      shadowing, say from cracks represented in the normal map. These are sometimes referred to as cavities. Small
+      scale geometry, especially details only present in the high poly and baked into the normal map, will not be
+      picked up by the renderer's real-time shadows. To capture this shadowing, we generate a cavity map,
+      which is typically an AO map with very short trace distance. This is multiplied by the final BaseColor
+      before output and multiplied with 0.5 (Specular default) as the Specular output. To be clear this is
+      BaseColor = Cavity*OldBaseColor, Specular = Cavity*0.5.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">For advanced use, this can be used to control the index of refraction (IOR). We have
+      not found this to be necesary for 99% of Materials. Below are Specular values based off of measured
+      IOR.</span></p>
+  <p><span class="c1"></span></p><a id="t.7a74785beef27051f47320ceb3327fb9c90e9229"></a><a id="t.4"></a>
+  <table class="c45">
+    <tbody>
+      <tr class="c18">
+        <td class="c68" colspan="1" rowspan="1">
+          <p class="c16"><span class="c21 c14">Material</span></p>
+        </td>
+        <td class="c89" colspan="1" rowspan="1">
+          <p class="c16"><span class="c21 c14">Specular</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c22" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Glass</span></p>
+        </td>
+        <td class="c43" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.5</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c22" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Plastic</span></p>
+        </td>
+        <td class="c43" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.5</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c22" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Quartz</span></p>
+        </td>
+        <td class="c43" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.570</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c22" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Ice</span></p>
+        </td>
+        <td class="c43" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.224</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c22" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Water</span></p>
+        </td>
+        <td class="c43" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.255</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c22" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Milk</span></p>
+        </td>
+        <td class="c43" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.277</span></p>
+        </td>
+      </tr>
+      <tr class="c18">
+        <td class="c42 c69" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">Skin</span></p>
+        </td>
+        <td class="c80" colspan="1" rowspan="1">
+          <p class="c16"><span class="c1">0.35</span></p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://seblagarde.wordpress.com/2011/08/17/feeding-a-physical-based-lighting-mode/&amp;sa=D&amp;ust=1571869492067000">Additional
+        charts and values.</a></span></p>
+  <p><span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 720.00px; height: 437.00px;"><img alt="" src="images/image13.png" style="width: 720.00px; height: 437.00px; margin-left: 0.00px; margin-top: 0.00px; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px);"></span></p>
+  <p><span class="c26 c9">Example measured Materials. Top: Charcoal, fresh concrete, worn asphalt. Bottom:
+      Copper, iron, gold, aluminum, silver, nickel, titanium</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1"></span></p>
+  <hr>
+  <p><span class="c21 c14"></span></p>
+  <h1 id="h.kesmp27npcz"><span class="c64 c62 c79 c38">T</span><span class="c5">ips &amp;
+      Techniques</span></h1>
+  <p><span class="c23 c37 c38">TL:DR (Summary) </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?t%3D133033&amp;sa=D&amp;ust=1571869492068000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c1">Yes, metalness maps should generally be 0 or 1.</span></p>
+  <p><span class="c14">Metalness </span><span class="c15">defines whether the surface is a raw metal or not
+      (this is important, </span><span class="c14">painted metal isn't metal</span><span class="c1"> for
+      instance, its paint).</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c15">For </span><span class="c14">metallic surfaces, the specular intensity is pulled
+      from the albedo </span><span class="c15">map, while the diffuse is darkened to 0 (raw metals reflect nearly
+      100% of light, so they don't really have a diffuse component). This basically means that the
+      albedo for </span><span class="c14">raw metals</span><span class="c1"> is black. </span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c15">For </span><span class="c14">insulators</span><span class="c15">, or non-metals, the
+    </span><span class="c14">diffuse color is pulled from the albedo</span><span class="c1"> map, while the
+      specular intensity is set to a fix value (0.04 or so), as most non metals reflect light in very narrow range
+      of values.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c14">Gloss/roughness</span><span class="c1"> maps define how glossy or rough a
+      surface is, and how tight or wide the specular reflections are. Glossier surfaces have tighter, more intense
+      highlights, while rougher surfaces have wider/blurrier and more dim highlights. This applies regardless of
+      material type. If the surface is a glossy plastic, you make it glossy in the gloss map. For wear and
+      tear and such, say for where the gloss coating on the plastic is worn off, you would make it more rough in
+      the gloss map. You shouldn't be painting highlights or lighting of any sort into any maps with modern
+      shaders.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">Generally engines will use a full color spec map, or a metalness map. The biggest
+      difference is really how the content is packed. Its true that the metalness workflow gives you less control,
+      but its more efficient memory wise as you can pack more info into less textures. The theory with the
+      metalness thing is that it is harder for artists to use incorrect specular values (artists have a tendency
+      to eyeball stuff, which often looks ok under one set of lighting but totally wrong in another).</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">As far as glossy plastic goes, you should be able to do this just fine with a
+      metalness map and your gloss map. Something like a car paint shader is more complex and would likely require
+      a custom shader.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c21 c14">The best way to visualize these concepts is to load up TB2/EU4, add a sphere,
+      and play with simple parametric materials. Adjust the gloss/roughness values, observe how the reflections
+      change. Play with the metalness value, etc.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c23 c37 c38">UE4 - Biggest Difference </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=https://docs.unrealengine.com/latest/INT/Engine/Rendering/Materials/PhysicallyBased/index.html&amp;sa=D&amp;ust=1571869492070000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c15">UE4 does NOT use the Albedo map the same way another engine would strangely enough.
+      It is referred to a "Base Colour" and instead of metals being more or less black, they are
+      actually the opposite. Visit the source or visit </span><span class="c34 c15"><a class="c7" href="#h.xr0kumhyjves">UE4 - The Difference</a></span><span class="c15"> for more
+      information.</span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c23 c37 c38">sRGB Color Space (gamma) </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://docs.cryengine.com/display/SDKDOC4/Physically%2BBased%2BRendering&amp;sa=D&amp;ust=1571869492071000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c1">Be aware that you are working in sRGB color space on your monitor when painting a
+      texture. In sRGB space, a 50% mid-gray is not 0.5 or 127 but rather 0.5 raised by the inverse of gamma 2.2
+      which equals 187 in Photoshop. In a nutshell, the reason that sRGB is used is to avoid banding artifacts. In
+      sRGB space you get more precision for darker colors to which the human eye is more sensitive. Before working
+      on colors, please make sure that your screen is calibrated properly.</span></p>
+  <p><span class="c35 c14"></span></p>
+  <p><span class="c23 c37 c38">Spacing per Map </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showpost.php?p%3D1990208%26postcount%3D702&amp;sa=D&amp;ust=1571869492072000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c14">Diffuse/Albedo</span><span class="c15"> maps are generally gamma space.</span>
+  </p>
+  <p><span class="c14">Specular maps</span><span class="c15"> generally are Gamma space.</span></p>
+  <p><span class="c14">Gloss/Roughness maps</span><span class="c15"> should generally be linear space
+      (sRGB off), but its not a big deal if you use sRGB/Gamma space.</span><span class="c15 c54">*</span></p>
+  <p><span class="c14">Normal maps </span><span class="c1">should always be linear space (sRGB off).</span>
+  </p>
+  <p><span class="c35 c14"></span></p>
+  <p><span class="c1">There isn't a huge emphasis on colour spacing for PBR but it is noted in many
+      sources because those sources are trying to cover all basis and explain the nature of this genre.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c23 c37 c38">Photoshop Setup </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://docs.cryengine.com/display/SDKDOC4/Physically%2BBased%2BRendering&amp;sa=D&amp;ust=1571869492073000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c15">Verify that your Photoshop color management is set up properly. You can access the
+    </span><span class="c14">Color Settings</span><span class="c15"> from the menu via </span><span class="c14">Edit-&gt;Color Settings</span><span class="c1">...</span></p>
+  <p><span class="c1">RGB should be set to sRGB and Gray to Gray Gamma 2.2</span></p>
+  <p><span class="c1">By default, Gray is often set to Dot Gain 20% which will result in a color
+      transformation in the alpha channel. A value of 127 will come into the engine as 104 in that case which can
+      cause inconsistencies, so please make sure Gamma 2.2 is used instead.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c23 c37 c38">Some Nifty Time-Saving Tips! </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://docs.cryengine.com/display/SDKDOC4/Physically%2BBased%2BRendering&amp;sa=D&amp;ust=1571869492074000">source</a></span><span class="c9">)</span></p>
+  <ul class="c53 lst-kix_81vq2cl0jmdl-0 start">
+    <li><span class="c15">The </span><span class="c14">gloss </span><span class="c15">map is
+      </span><span class="c14">one </span><span class="c15">of the </span><span class="c14">most important
+      </span><span class="c15">textures. With the gloss map you can give some </span><span class="c14">history to
+        an asset</span><span class="c1">. For example, make parts of an object that were touched a lot by people
+        less rough.</span></li>
+    <li><span class="c15">For </span><span class="c14">non-metal </span><span class="c15">objects,
+      </span><span class="c14">don't waste time with a specular map but focus rather on the gloss
+        map</span><span class="c1">. This will also help to save memory, as a constant specular material color
+        is enough in most cases.</span></li>
+    <li><span class="c1">Put variation into the gloss map. Not just random noise but think really
+        where the object would be less or more rough.</span></li>
+    <li><span class="c1">Always test the specular reaction of objects/materials, by rotating them
+        against a light source and viewing them from different angles. Specular is what gives objects the sense
+        of volume and breaks the flat look.</span></li>
+    <li><span class="c1">Make sure that the lighting is setup properly when testing assets (you can
+        use a special asset test level with calibrated lighting).</span></li>
+    <li><span class="c1">If an object has the correct physical specular color but you see hardly any
+        specular highlights on top of the diffuse, the gloss is likely too low. Try to increase the brightness
+        of the gloss map.</span></li>
+    <li><span class="c1">[CE3] To see just the specular without any diffuse, put the Diffuse Color to
+        black in the material editor.</span></li>
+    <li><span class="c15">[CE3] Use the histogram in the material editor to identify issues in the
+        material setup. You can easily judge the overall brightness of textures using the histogram.</span></li>
+  </ul>
+  <p><span class="c26 c9"></span></p>
+  <p><span class="c23 c37 c38">Deciding Which Values to Use for Materials</span><span class="c23">
+    </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.marmoset.co/toolbag/learn/pbr-practice%23joeri&amp;sa=D&amp;ust=1571869492075000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c1">Gather reference for each material type/part of the object. </span></p>
+  <p><span class="c15">Start by doing a</span><span class="c14"> rough block</span><span class="c15"> in
+      for each </span><span class="c14">material type</span><span class="c1">, this
+      doesn't have to be exact but should be close enough so that you have a good base to start tweaking
+      from.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">For each material I start with the reflectance value, these can be found in various
+      charts online, if I can't find a reflectance value for a certain material, I try to determine it with
+      logical reasoning (ie, worn out rubber will be less reflective, brass is a mix of copper and zinc,
+      etc).</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">Reflectance values are the easiest to start off with, and give you a good base for
+      the other maps. For insulators, its important to keep to keep the values within the small range that
+      non-metals typically reflect. For metals, its important to make the diffuse black first, and then find the
+      appropriate reflectance value. After this I will assign a quick roughness value, usually by just sorting
+      materials into 3 categories (shiny, middle or rough). Then I pick an albedo color, paying attention here to
+      keep things consistent and not too dark. I also toggle through various skies to make sure the materials are
+      consistent in a variety of lighting conditions. Once this initial stage is over I fall back on observation
+      for the fine tuning these values, since every material is different, keeping in mind the concepts of PBR. At
+      this point I like to add a basic overlay to the normal map for materials that have a strong surface
+      variation, such as bumpy plastic.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">Its important to remember that values in the reflectance map only change when there
+      is an actual change in material.</span></p>
+  <p><span class="c3"></span></p>
+  <p><span class="c23 c37 c38">Colour Space Confusion and Why It Matters</span><span class="c23">
+    </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showpost.php?p%3D2090837%26postcount%3D97&amp;sa=D&amp;ust=1571869492077000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c15">Gloss/roughness maps and metalness maps tend to be linear space as well, but they
+      don't necessarily have to be. From a practical perspective, any input that defines a percentage value
+      (like gloss and metalness), makes sense to use linear color space for the texture input. This is so you can
+      easily mock up a material will a parametric input in your shader (which tends to be linear space), and then
+      easily duplicate that value in </span><span class="c14">photoshop </span><span class="c15">by selecting the
+      color with the </span><span class="c14">brightness input in the color picker</span><span class="c1">. The
+      values for these maps will not be accurately visualized in photoshop though (which works in gamma space by
+      default), so its important to verify the results in the actual shader/game/renderer and not worry about what
+      it looks like in 2D.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c15">Generally it's important for this to be consistent throughout your project,
+      which maps are in linear or gamma space. Its</span><span class="c14"> not something that should vary
+      per asset</span><span class="c15">, so talk to your technical artist, engineers, etc if you're confused
+      about which to use. Again, you don't need to set photoshop up in a special way to use linear space
+      textures, just </span><span class="c14">remember to check</span><span class="c15"> the final
+    </span><span class="c14">result in game</span><span class="c1">. There are some more technical things to
+      consider, like if you're using gamma space specular but find a measured reflectance value in linear
+      space. In that case you will need to convert the values.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c15">Lastly, all your textures do not need to be linear space &quot;to be pbr&quot;,
+      I've heard this before, I'm not sure what the source of this information is but its factually
+      incorrect. Color space simply defines how much precision is used for the darker values (more in the case of
+      sRGB) vs a linear distribution of precision for the data (linear space). </span><span class="c14">Color
+      space in regards to texture inputs actually has nothing to do with physically based rendering (other than
+      the fact that you may need to convert your measured base values - which depends on the source of said
+      values)</span><span class="c1">. However, most renderers that have PBR shaders, the renderer itself is in
+      linear space(for a variety of technical reasons), but this is something different entirely.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c23 c37 c38">Dealing with Elements like Rust</span><span class="c23"> </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?t%3D136390%26page%3D5&amp;sa=D&amp;ust=1571869492078000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c15">[</span><span class="c14">Metalness workflow</span><span class="c1">] In 99% of
+      cases, metals should be black or white but rust is an exception. You really don't want midtones
+      unless you are blending between two materials ( non metal and metal). Especially with something like rust.
+      You will end up with something that is giving off orange specular (which rust doesn't) and is very dark
+      in the diffuse. I would keep it close to either end of the spectrum, but not in between. The areas which are
+      only lightly rusted, are quite significantly less reflective than the un-rusted areas. But maybe you
+      would still want a metalness value of 0.1 or 0.2 or something, as its probably a bit more reflective than
+      0.04.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">Minor science bit here:</span></p>
+  <p><span class="c1">You may remember from school that chemical reactions are irreversible, and usually
+      happen &quot;instantly&quot;. the same is true of oxidation, once a molecule becomes oxidized it stays that
+      way forever. That's why when you want to get a rust patch cleaned off of your car, you have to sand it
+      right down to the bare metal and treat it from there.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">Now, how to apply that to your metalness map:</span></p>
+  <p><span class="c1">Start off with white, this is your metallic layer, which will always be underneath
+      the oxidized layer. then take a black brush, and adjust the opacity of the brush to reflect how THICK you
+      want the layer of oxidation to be. the thicker the layer of oxidation, the blacker it becomes. It's
+      possible to have a very fine/thin layer of oxidation that still allows a lot of light to be reflected by the
+      underlying metal, but it's also possible for the oxidation to become so thick that no light can be
+      reflected by the metal beneath.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">Of course, as with everything, this isn't the only way to approach this and is
+      just one method someone prefers. Don't get caught up with steps and following everything to the
+      letter because another approach to the above would to alter the albedo/spec map more than the metalness map,
+      etc. Refer to the tutorial/examples </span></p>
+  <p><span class="c1">section for more information.</span></p>
+  <p><span class="c1"></span></p>
+  <hr>
+  <p><span class="c26 c9"></span></p>
+  <h1 id="h.fsbxkgso6mkw"><span class="c5">Examples</span></h1>
+  <p><span class="c14">Tileable Dirt &amp; Pebbles Texture</span><span class="c15"> - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?t%3D132790&amp;sa=D&amp;ust=1571869492079000">click
+        here</a></span></p>
+  <p><span class="c14">Some Environment Textures</span><span class="c15"> - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.clintoncrumpler.com/74261/2590892/portfolio/pbr-textures&amp;sa=D&amp;ust=1571869492080000">click
+        here</a></span></p>
+  <p><span class="c14">Cutting Torch</span><span class="c15"> - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?p%3D2025192&amp;sa=D&amp;ust=1571869492080000">click
+        here</a></span></p>
+  <p><span class="c14">PBR Stylized Dagger</span><span class="c14 c62"> - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?t%3D135431&amp;sa=D&amp;ust=1571869492080000">click
+        here</a></span></p>
+  <p><span class="c21 c14"></span></p>
+  <p><span class="c23 c37 c38">Video</span></p>
+  <p><span class="c14">PBR Theory Explained</span><span class="c14 c62"> - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=https://www.youtube.com/watch?v%3DTt30zzBQb3w&amp;sa=D&amp;ust=1571869492081000">click
+        here</a></span></p>
+  <p><span class="c14">PBR in Substance Designer </span><span class="c14 c62">- </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=https://www.youtube.com/watch?v%3DLP7HgIMv4Qo&amp;sa=D&amp;ust=1571869492081000">click
+        here</a></span></p>
+  <p><span class="c46 c14 c62"></span></p>
+  <p><span class="c46 c14 c62"></span></p>
+  <hr>
+  <p><span class="c46 c14 c62"></span></p>
+  <h1 id="h.oxe8vtv1hlf7"><span class="c64 c62 c79 c38">Additional Readings &amp; References</span></h1>
+  <p><span class="c23 c37 c38">Comprehensive Guide</span></p>
+  <p><span class="c14">Vol.1 - The Theory of Physically based Rendering</span><span class="c15"> -
+    </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.allegorithmic.com/pbr-guide&amp;sa=D&amp;ust=1571869492082000">click
+        here</a></span></p>
+  <p><span class="c14">Vol.2 - Practical Guidelines for PBR Texturing</span><span class="c15"> -
+    </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.allegorithmic.com/pbr-guide&amp;sa=D&amp;ust=1571869492083000">click
+        here</a></span></p>
+  <p><span class="c21 c14"></span></p>
+  <p><span class="c23 c37 c38">General</span></p>
+  <p><span class="c14">UDK Physically Based Lighting</span><span class="c15"> - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?t%3D124934&amp;sa=D&amp;ust=1571869492083000">click
+        here</a></span></p>
+  <p><span class="c15">Free Engines Supporting Physically Based Lighting - </span><span class="c15 c34"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?t%3D124683%26highlight%3Dphysical%2Bbased%2Bshading&amp;sa=D&amp;ust=1571869492083000">click
+        here</a></span></p>
+  <p><span class="c15">TGA Physically Based Lighting CGFX Shader for Maya Viewport - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?t%3D89658&amp;sa=D&amp;ust=1571869492084000">click
+        here</a></span></p>
+  <p><span class="c21 c14"></span></p>
+  <p><span class="c23 c37 c38">Science &amp; Theory</span></p>
+  <p><span class="c14">Water Drops &amp; Wet Surfaces PBR </span><span class="c15">- </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=https://seblagarde.wordpress.com/2012/12/10/observe-rainy-world/&amp;sa=D&amp;ust=1571869492084000">click
+        here</a></span></p>
+  <p><span class="c15">Sebastien Lagarde's </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://seblagarde.wordpress.com/tag/physically-based-rendering/&amp;sa=D&amp;ust=1571869492085000">Adopting
+        a physically based shading model</a></span></p>
+  <p><span class="c14">Feeding a Physically Based Lighting Mode</span><span class="c15"> -
+    </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://seblagarde.wordpress.com/2011/08/17/feeding-a-physical-based-lighting-mode/&amp;sa=D&amp;ust=1571869492085000">click
+        here</a></span></p>
+  <p><span class="c15">SIGGRAPH 2014 Course: Physically Based Shading in Theory and Practice - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://blog.selfshadow.com/publications/s2013-shading-course/&amp;sa=D&amp;ust=1571869492086000">click
+        here</a></span></p>
+  <p><span class="c15">John Hable's excellent blog post: </span><span class="c34 c64 c15 c51 c72"><a class="c7" href="https://www.google.com/url?q=http://filmicgames.com/archives/547&amp;sa=D&amp;ust=1571869492086000">Everything
+        Is Shiny</a></span></p>
+  <p><span class="c15">John Hable's even better blog post: </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://filmicgames.com/archives/557&amp;sa=D&amp;ust=1571869492086000">Everything
+        Has Fresnel</a></span></p>
+  <p><span class="c15">The </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://renderwonk.com/publications/s2010-shading-course/&amp;sa=D&amp;ust=1571869492087000">SIGGRAPH
+        2010 course</a></span><span class="c15"> on PBR</span></p>
+  <p><span class="c15">Always worth mentioning: </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://http.developer.nvidia.com/GPUGems3/gpugems3_ch24.html&amp;sa=D&amp;ust=1571869492087000">The
+        Importance of Being Linear</a></span></p>
+  <p><span class="c15">Slideshow of </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_slides.pdf&amp;sa=D&amp;ust=1571869492088000">Real
+        Shading in Unreal Engine 4</a></span></p>
+  <p><span class="c15">Mike Seymour's </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.fxguide.com/featured/monsters-university-rendering-physically-based-monsters/&amp;sa=D&amp;ust=1571869492088000">Monsters
+        University: rendering physically based monsters</a></span></p>
+  <p><span class="c15">Physically Based Rendering - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://books.google.ca/books?hl%3Den%26lr%3D%26id%3D9nJBAJhTxt8C%26oi%3Dfnd%26pg%3DPP2%26dq%3Dphysically%2Bbased%2Brendering%26ots%3DdZYXJeXmty%26sig%3Dy9FiFsdd3c4BZYiuTfP8lnZYsQM%26redir_esc%3Dy%23v%3Donepage%26q%3Dphysically%2520based%2520rendering%26f%3Dfalse&amp;sa=D&amp;ust=1571869492088000">From
+        Theory to Implementation</a></span></p>
+  <p><span class="c14">Crytek's PBR Presentation ft. Ryse</span><span class="c15"> -
+    </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.crytek.com/download/2014_03_25_CRYENGINE_GDC_Schultz.pdf&amp;sa=D&amp;ust=1571869492089000">Moving
+        to the Next Generation - The Rendering Technology of Ryse</a></span></p>
+  <p><span class="c14">Crafting Physically Motivated Shading Models for Game Development - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://renderwonk.com/publications/s2010-shading-course/hoffman/s2010_physically_based_shading_hoffman_b.pdf&amp;sa=D&amp;ust=1571869492089000">click
+        here</a></span></p>
+  <p><span class="c21 c14"></span></p>
+  <p><span class="c23 c37 c38">Practice</span></p>
+  <p><span class="c15">S&eacute;bastien Lagarde's summary of </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.fxguide.com/featured/game-environments-parta-remember-me-rendering/&amp;sa=D&amp;ust=1571869492089000">Rendering
+        Remember Me</a></span></p>
+  <p><span class="c21 c14"></span></p>
+  <p><span class="c23 c37 c38">Discussions </span></p>
+  <p><span class="c15">Polycount discussion on PBR </span><span class="c14">- </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?t%3D133033&amp;sa=D&amp;ust=1571869492090000">click
+        here</a></span></p>
+  <p><span class="c15">Polycount PBR Texturing Process Q&amp;A</span><span class="c14"> - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?t%3D132755&amp;sa=D&amp;ust=1571869492090000">click
+        here</a></span></p>
+  <p><span class="c15">Reddit Star Citizen PBR Discussion</span><span class="c14"> - </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.reddit.com/r/starcitizen/comments/1rl7bq/could_somebody_please_explain_physical_based&amp;sa=D&amp;ust=1571869492091000">click
+        here</a></span></p>
+  <p><span class="c21 c14"></span></p>
+  <hr>
+  <p><span class="c21 c14"></span></p>
+  <h1 id="h.3iq8n6ne609e"><span class="c64 c62 c38 c79">FAQ</span></h1>
+  <p><span class="c29 c24">I don't know how to use a PBR system, will I need to re-learn how to
+      create art content?</span></p>
+  <p><span class="c1">In most cases, no. If you have experience with previous generation shaders which use
+      dynamic per-pixel lighting you already possess much of the knowledge necessary to create content for a PBR
+      system. Terminology tends to be one of the biggest stumbling blocks for artists, so I have written a section
+      on various terms and translations below. Most of the concepts here are simple and easy to pick up.</span>
+  </p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">If your experience lies mostly with hand painted/mobile work, learning the new
+      techniques and workflows outlined here may be more of a challenge. However, likely not more difficult than
+      picking up a traditional normal map based workflow.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c24 c29">If I use a PBR shader does that mean my artwork is physically accurate?</span>
+  </p>
+  <p><span class="c1">Not necessarily; simply using a PBR shader does not make your artwork physically
+      accurate. A PBR system is a combination of physically accurate lighting, shading, and properly calibrated
+      art content. The deciding factor on whether or not it looks physically accurate is the texture
+      work.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Do I need to use a metalness map for it to be PBR?</span></p>
+  <p><span class="c1">No, a metalness map is just one method of determining reflectivity and is generally
+      not more or less physically accurate than using a specular color/intensity map.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Do I need to use index of refraction (IOR) for it to be PBR?</span></p>
+  <p><span class="c1">No, similar to the metalness map input, IOR is simply an alternate method to define
+      reflectivity.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Is specular no longer a thing?</span></p>
+  <p><span class="c1">Not quite. Specular reflection intensity, or reflectivity is still a very important
+      parameter in PBR systems. You may not have a map to directly set reflectivity (e.g. with a metalness
+      workflow) but it is still required in a PBR system.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Do gloss maps replace specular maps?</span></p>
+  <p><span class="c15">No, gloss or roughness maps define the </span><span class="c14">microsurface
+    </span><span class="c1">of the material (how rough or smooth it is), and do not replace a specular intensity
+      map. However, if you're not used to working with gloss maps, it may be somewhat of an adjustment to
+      put certain detail in the gloss map that you would otherwise add to the specular map. Generally spec maps
+      (in the non-metalness workflow) are quite flat in comparison to its predecessor while gloss/roughness maps
+      remain more or less the same; all the microsurface details are located here. Even those that would be
+      too small for the normal map. (depending on the engine).</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Can a PBR system be used to create stylized art?</span></p>
+  <p><span class="c1">Yes, absolutely. If your goal is to create a fantastical, stylized world, having
+      accurate material definition is still very important. Even if you're creating a unicorn that farts
+      rainbows, you still generally want that unicorn to obey the physics of light and matter. A great example of
+      this is Pixar's work, which is very stylized, yet often on the cutting edge of material accuracy.
+    </span></p>
+  <p><span class="c15">Here is a great article about PBR in Monsters University: </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.fxguide.com/featured/monsters-university-rendering-physically-based-monsters/&amp;sa=D&amp;ust=1571869492094000">fxguide
+        feature on Monsters University </a></span></p>
+  <p><span class="c15">Here is another example created by our resident stevston89 of polycount:
+    </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?t%3D135431&amp;sa=D&amp;ust=1571869492094000">PBR
+        Stylized Dagger</a></span></p>
+  <p><span class="c21 c51 c60"><a class="c7" href="https://www.google.com/url?q=http://www.fxguide.com/featured/monsters-university-rendering-physically-based-monsters/&amp;sa=D&amp;ust=1571869492095000"></a></span>
+  </p>
+  <p><span class="c29 c24">What is all this talk about sRGB, gamma, and linear? And why is it
+      important?</span></p>
+  <p><span class="c1">sRGB, gamma, and linear are colour spaces used when defining a certain colour.
+      A simpler way to think about it is RGB vs CMYK. sRGB stands for standard RGB colour space.
+      This is basically how light/information is displayed.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c14">sRGB </span><span class="c15">is for all intensive purposes, synonymous with gamma
+      (gamma corrected). It is of an exponential graph. 0 - 255. As an fyi, the neutral gray/mid point of a
+      gamma colour space is 187, </span><span class="c14">not</span><span class="c1"> 127/128. </span></p>
+  <p><span class="c14">Linear </span><span class="c1">is, as it sounds, a linear graphic. 0 - 1</span></p>
+  <p><span class="c21 c14"></span></p>
+  <p><span class="c24 c63">Does the old workflow of baking in the AO/cavity into your diffuse and spec
+      still apply? </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showpost.php?p%3D2088451%26postcount%3D21&amp;sa=D&amp;ust=1571869492096000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c14">[AO] </span><span class="c1">No. In the PBR workflow it does not apply. (Check
+      with your respective engine/shader for more details) I leave it to the infamous Earthquake of Marmoset
+      to elaborate. </span></p>
+  <p><span class="c14">[Cavity] </span><span class="c1">It can still be applied to the albedo and spec
+      maps. (Check with your respective engine/shader for more details) Engines like TB2 offer the ability to
+      input an occlusion and cavity map with sliders to adjust its influence on diffuse/spec.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c14">Large scale AO</span><span class="c15"> really should </span><span class="c14">not
+    </span><span class="c15">be </span><span class="c14">baked </span><span class="c15">into
+    </span><span class="c14">specular </span><span class="c1">(or the metallic materials of an albedo map when using
+      the metalness workflow), or diffuse, this just does not make much sense physically. As mentioned above, when
+      you do that, your AO is occluding direct light sources, which is very much the incorrect thing to do. Just
+      think about it for a second, if you have the inside of a helmet, naturally your baked ao map would get a lot
+      darker there right? Now, put a light source directly inside that helmet, what happens in real life?</span>
+  </p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1">If that content is baked into your textures, you can never light that area correctly
+      in a game.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Is one workflow or route better than the other?</span></p>
+  <p><span class="c1">Not really, it's just boils down to which you personally get better results
+      from, are more comfortable with, which engine you are using, and if you are texturing in an office, which
+      method they use.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Will artists need to capture photographic reference with a polarized camera
+      system for every material they wish to create?</span></p>
+  <p><span class="c15">No, generally you will be provided with reference for common materials by your
+      studio. Alternatively, you can find known values from various 3rd party sources, like </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.quixel.se/megascans/&amp;sa=D&amp;ust=1571869492098000">Quixel's
+        Megascans</a></span><span class="c15 c86"> </span><span class="c15">service. Creating your own scan
+      data is a very technical and time consuming process, and in most cases not necessary. However there is
+      a quick tutorial located </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?p%3D2089327&amp;sa=D&amp;ust=1571869492098000">here</a></span><span class="c1">.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Is there a way to grab albedo/spec, etc values from real life?</span></p>
+  <p><span class="c15">There is! But it requires some equipment and knowledge of colour space as well
+      as how to use a camera. On top of that it requires knowledge of the Macbeth chart and other various
+      "tools" to get an accurate reading. Polycount's almighty_gir has made a </span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showthread.php?p%3D2089327&amp;sa=D&amp;ust=1571869492099000">quick
+        tutorial</a></span><span class="c1"> on this. </span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c26 c9">Caution: If you have no clue what you are doing, you could potentially be pulling
+      inaccurate values. Consult the tutorial and read through the posts for a better understanding.</span>
+  </p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Where is texturing headed? Is it going to be procedural from now
+      on?</span></p>
+  <p><span class="c15">There's no definitive answer for this. What I do know is that more
+      procedural tools are becoming more available. They are a blessing and a little bit of a curse I think.
+      Blessing because it speeds up production and accuracy but for those who are not competent on texturing
+      and rely on these programs may not see their skill level increase and if their studio does not have said
+      tool, well they're on their own. Some procedural-oriented tools off the top of my head include
+      Substance Designer and DDO. Still if one has time, it'd be of their benefit to learn such
+      programs and add them to their arsenal.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Is there a central database for material values for albedo, spec, roughness,
+      etc?</span></p>
+  <p><span class="c15">There is and there isn't. There is from those that are publically shared
+      and there isn't from the studios whom use their values specific to their engines. Regardless, please
+      do take care when using values and don't pigeonhole yourself into thinking that a value is the only
+      value for that material.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Any tips for making my work look good?</span></p>
+  <p><span class="c1">Ensure that you have accurate albedo, spec, and roughness values. Once you do
+      and a decent texture job has been done, your object will look great in any lighting condition.
+      Don't adjust values for a specific lighting environment as it may not look as well in other
+      settings, etc.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">How do I make sure I have the "exact" value needed for a
+      material?</span></p>
+  <p><span class="c15">There is no </span><span class="c14">exact</span><span class="c15"> value for
+      any given material as in the real world, many factors influence the physical values of that item. Long
+      story short, just utilize some base values found online as a </span><span class="c14">starting
+      point</span><span class="c15"> and adjust it in small increments until it looks like the material
+      you're attempting to represent. It becomes easier with more practice and looking up values will
+      be needed less.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Is there a way to get better at PBR/PBT?</span></p>
+  <p><span class="c15">Yes. There are multiple ways. Some include: practice - you'll get
+      no where and won't get any better without practice. Tutorials and looking at other artists' work
+      (assuming their work is accurate) will help train your eye into identifying what looks accurate.
+      Another way is to learn more about science and physics and the nature of light/materials and their
+      interaction with each other and the world around us. You kind of have to step into the realm of a
+      technical artist almost...just a smidge. </span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">I'm new to PBR but it looks like this method of texturing is a lot more
+      troublesome than before?</span></p>
+  <p><span class="c1">Not true in my opinion. It may look this way because this is new to you but
+      once you've gotten used to it or know of the workflow, it's actually simpler in a sense, and
+      quicker. You don't have to repeat diffuse details in all other maps, ensure gloss looks
+      interesting VS spec and diffuse, etc. As well, more procedural based/material layering software has
+      come into the market that aid in next-gen texturing.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">How come there is not more math and theory/concept in this
+      "encyclopedia"?</span></p>
+  <p><span class="c15">This doc was originally compiled/made for artists to read and get a grasp on PBR.
+      As such I guess I neglected those who were interested to know the underlying details of PBR. For
+      now please point your attention to the </span><span class="c34 c15"><a class="c7" href="#h.oxe8vtv1hlf7">Additional Readings &amp; References</a></span><span class="c1"> for more
+      information.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">How come my textures look different in UE4 VS Marmoset VS Unity, etc?</span></p>
+  <p><span class="c1">That is because every engine handles PBR/values/light/materials differently.
+      For example I recently textured a vehicle in PBR and my values were fine in Marmoset but when I
+      brought it into Unity, they were not correct and as such made it look diluted and not textured at all.
+      Lacked material definition. So generally when texturing, always preview in the engine the model
+      is meant for.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Is there any easier way of texturing in PBR?</span></p>
+  <p><span class="c15">Short answer is yes, there is. Substance Painter/Designer and the Quixel Suite
+      are just 2 of the most common packages one can use to texture. They have preset materials with values
+      already and even have different previews depending on which engine you will ultimately export to. Not
+      many people texture manually now as it is rather time consuming from a production standpoint and just not as
+      flexible/versatile. Though being </span><span class="c14">able</span><span class="c1"> to texture
+      manually and knowing how to would help with your knowledge overall.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c29 c24">Where's the future of texturing headed?</span></p>
+  <p><span class="c15">My guess? If/when it becomes feasible/economical/practical, photogrammetry. It
+      involves taking high res photos of a subject at specific angles under ideal lighting conditions (I hear
+      overcast/neutral is best) and using a program, it is able to extrapolate all that data but from the examples
+      I've seen, the results (there needs to be tweaking and authoring of course) I've seen, they look
+      a little on the duller side in terms of spec/gloss.</span></p>
+  <p><span class="c1"></span></p>
+  <hr>
+  <p><span class="c1"></span></p>
+  <h1 id="h.2e4ou5ht8iea"><span class="c64 c62 c79 c38">Glossary &amp; Terms</span></h1>
+  <p class="c10 c49"><span class="c14">AO</span><span class="c1"> - Ambient Occlusion</span></p>
+  <p class="c10 c49"><span class="c14">CE3 - </span><span class="c1">CryENGINE 3</span></p>
+  <p class="c10 c49"><span class="c14">PBR - </span><span class="c1">Physically Based Rendering</span></p>
+  <p class="c10 c49"><span class="c14">PBT - </span><span class="c1">Physically Based Texturing</span></p>
+  <p class="c10 c49"><span class="c14">UDK - </span><span class="c1">Unreal development Kit</span></p>
+  <p class="c10 c49"><span class="c14">UE4</span><span class="c1"> - Unreal Engine 4</span></p>
+  <p class="c10 c49"><span class="c14 c54">*</span><span class="c1"> - Denotes that the accuracy of the
+      information is in review.</span></p>
+  <p class="c10 c49"><span class="c14">TL;DR</span><span class="c1"> - Too Late; Didn't Read</span></p>
+  <p class="c10 c49"><span class="c14">TB2</span><span class="c1"> - Marmoset Toolbag 2</span></p>
+  <p><span class="c14">F0 </span><span class="c15">- base reflectance. It simply refers to how much
+      light a surface reflects when looking directly at it </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showpost.php?p%3D2088718%26postcount%3D42&amp;sa=D&amp;ust=1571869492105000">source</a></span><span class="c26 c9">)</span></p>
+  <p><span class="c15"> - </span><span class="c15">fresnel zero </span><span class="c15">(when fresnel has
+      zero effect; what colour is the object when fresnel has no effect)
+    </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showpost.php?p%3D2088891%26postcount%3D44&amp;sa=D&amp;ust=1571869492105000">source</a></span><span class="c9">)</span></p>
+  <p><span class="c14">F</span><span class="c14"> </span><span class="c15">- </span><span class="c15">Fresnel</span><span class="c14">. </span><span class="c15">How much light is reflected at a
+      grazing/glancing angle </span><span class="c9">(</span><span class="c34 c9"><a class="c7" href="https://www.google.com/url?q=http://www.polycount.com/forum/showpost.php?p%3D2088718%26postcount%3D42&amp;sa=D&amp;ust=1571869492106000">source</a></span><span class="c26 c9">)</span></p>
+  <p><span class="c1"> - named after French engineer and physicist Augustin-Jean Fresnel</span>
+  </p>
+  <p><span class="c1"></span></p>
+  <hr>
+  <p><span class="c1"></span></p>
+  <h1 class="c32 c49" id="h.dn9x6jf159bn"><span class="c64 c62 c79 c38">Tools &amp; Programs</span></h1>
+  <p><span class="c3">Tools &amp; Plugins</span></p>
+  <p><span class="c34 c14"><a class="c7" href="https://www.google.com/url?q=https://www.youtube.com/watch?v%3D_MU3M6xqhe4&amp;sa=D&amp;ust=1571869492107000">Materialing
+        Alpha </a></span><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=https://www.youtube.com/watch?v%3D_MU3M6xqhe4&amp;sa=D&amp;ust=1571869492107000">-
+        Free Photoshop PBR Material Painting</a></span><span class="c1"> - developed by Andrew
+      "d1ver"
+      Maximov. Plugin for Photoshop.</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c3">Official Engines Supporting PBR</span></p>
+  <p><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=https://www.unrealengine.com/blog/welcome-to-unreal-engine-4&amp;sa=D&amp;ust=1571869492107000">Unreal
+        Engine 4</a></span></p>
+  <p><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://www.crydev.net/index.php&amp;sa=D&amp;ust=1571869492108000">CryENGINE
+        3</a></span></p>
+  <p><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=https://www.marmoset.co/toolbag&amp;sa=D&amp;ust=1571869492108000">Marmoset
+        Toolbag 2</a></span></p>
+  <p><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=https://www.unrealengine.com/products/udk/&amp;sa=D&amp;ust=1571869492108000">Unreal
+        Development Kit</a></span><span class="c1"> - with custom lighting (see additional
+      references)</span></p>
+  <p><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://unity3d.com/5&amp;sa=D&amp;ust=1571869492109000">Unity
+        5.0</a></span><span class="c1"> - Making huge strides and some devs choose this instead of other
+      engines.</span></p>
+  <p><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=http://dev.quixel.se/3do&amp;sa=D&amp;ust=1571869492109000">3DO</a></span><span class="c1"> - In affiliation with Skyskop and Marmoset Toolbag 2</span></p>
+  <p><span class="c34 c15"><a class="c7" href="https://www.google.com/url?q=https://www.reddit.com/r/GraphicsProgramming/comments/94eavz/google_new_filament_renderer_has_some_very/&amp;sa=D&amp;ust=1571869492109000">Google
+        Filament Renderer </a></span><span class="c1">- Filament is a PBR engine for Android, Linux, macOS, and
+      Windows; designed to be a small but highly efficient footprint on Android</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c3">Standalone Programs</span></p>
+  <p><span class="c34 c14"><a class="c7" href="https://www.google.com/url?q=http://www.allegorithmic.com/products/substance-designer&amp;sa=D&amp;ust=1571869492110000">Substance
+        Designer - Next-Gen Texturing</a></span><span class="c15"> - </span><span class="c1">material
+      layering workflow; node based; standalone program; great for uniques or tileables</span></p>
+  <p><span class="c34 c14"><a class="c7" href="https://www.google.com/url?q=https://www.allegorithmic.com/products/substance-painter&amp;sa=D&amp;ust=1571869492110000">Substance
+        Painter - 3D Painting Software</a></span><span class="c14"> </span><span class="c1">- great for
+      unique baked textures</span></p>
+  <p><span class="c34 c14"><a class="c7" href="https://www.google.com/url?q=http://dev.quixel.se/megascans&amp;sa=D&amp;ust=1571869492111000">Quixel's
+        Megascans</a></span><span class="c1"> - a material library like never before</span></p>
+  <p><span class="c34 c14"><a class="c7" href="https://www.google.com/url?q=http://www.thefoundry.co.uk/products/mari/&amp;sa=D&amp;ust=1571869492111000">Mari
+      </a></span><span class="c1">- a 3D painting tool</span></p>
+  <p><span class="c1"></span></p>
+  <p><span class="c3">Notable Artists</span></p>
+  <p><span class="c34 c14"><a class="c7" href="https://www.google.com/url?q=https://www.artstation.com/joshlynch&amp;sa=D&amp;ust=1571869492112000">Joshua
+        Lynch</a></span><span class="c15"> </span><span class="c1">- one of the pioneers in the use of
+      Designer, godly work</span></p>
+  <p><span class="c34 c14"><a class="c7" href="https://www.google.com/url?q=https://www.artstation.com/bradfolio&amp;sa=D&amp;ust=1571869492112000">Bradford
+        Smith</a></span><span class="c15"> </span><span class="c1">- another early adopter that paved the
+      way for a lot of artists</span></p>
+  <p><span class="c34 c14"><a class="c7" href="https://www.google.com/url?q=https://www.artstation.com/dete&amp;sa=D&amp;ust=1571869492112000">Daniel
+        Thiger</a></span><span class="c1"> - Lead Environment Artist over at Bungie. Phenomenal organic
+      work</span></p>
+  <p><span class="c34 c14"><a class="c7" href="https://www.google.com/url?q=https://www.artstation.com/stefangroenewoud&amp;sa=D&amp;ust=1571869492113000">Stefan
+        Groenewoud</a></span><span class="c1"> - perfect example of a mixture of old school (zbrush) and
+      new school (designer) texturing. Artist at Guerrilla Games (Horizon Zero Dawn)</span></p>
+  <p><span class="c34 c14"><a class="c7" href="https://www.google.com/url?q=https://www.artstation.com/qtheory&amp;sa=D&amp;ust=1571869492113000">Peter
+        Sekula</a></span><span class="c1"> - incredible intricate and detailed texture work (some in
+      designer, others in painter, etc)</span></p>
+  <p><span class="c1"></span></p>
+</body>
+
+</html>
